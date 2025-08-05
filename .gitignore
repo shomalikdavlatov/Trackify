@@ -8,3 +8,5 @@ server/dist
 
 # env files
 **/.env
+
+.DS_Store
