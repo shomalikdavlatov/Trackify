@@ -2,13 +2,13 @@ import {
     Controller,
     Post,
     Get,
-    Patch,
     Delete,
     Body,
     Param,
     Query,
     Req,
     UseGuards,
+    Put,
 } from '@nestjs/common';
 import { ExpenseService } from './expense.service';
 import { CreateExpenseDto } from './dto/expense.create.dto';
@@ -38,18 +38,19 @@ export class ExpenseController {
     ) {
         const userId = req['user']['userId'];
 
-        if (thisMonth === 'true') {
-            return this.service.getThisMonth(userId);
-        }
-
-        if (from && to) {
-            return this.service.getByDate(userId, new Date(from), new Date(to));
-        }
-
-        return this.service.getAll(userId, category);
+        if (thisMonth === 'true') return this.service.getThisMonth(userId);
+        else if (from && to)
+            return this.service.getByDate(
+                userId,
+                new Date(from),
+                new Date(new Date(to).setHours(23, 59, 59, 999)),
+            );
+        else if (!from && !to && !thisMonth)
+            return this.service.getAll(userId, category);
+        else return [];
     }
 
-    @Patch(':id')
+    @Put(':id')
     async update(
         @Param('id') id: string,
         @Body() dto: UpdateExpenseDto,
@@ -63,7 +64,7 @@ export class ExpenseController {
     @Delete(':id')
     async delete(@Param('id') id: string, @Req() req: Request) {
         const userId = req['user']['userId'];
-        
+
         return this.service.delete(id, userId);
     }
 }

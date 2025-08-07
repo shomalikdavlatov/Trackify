@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
+import { Types } from 'mongoose';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
 
 @Injectable()
@@ -6,12 +11,15 @@ export class ExpenseService {
     constructor(private db: MongoDBService) {}
 
     async create(dto: any) {
-        const category = await this.db.ExpenseCategoryModel.findOne({_id: dto.category});
-        if (!category) throw new NotFoundException("Expense category not found!");
+        const category = await this.db.ExpenseCategoryModel.findOne({
+            _id: dto.category,
+        });
+        if (!category)
+            throw new NotFoundException('Expense category not found!');
 
-        const user = await this.db.UserModel.find({ _id: dto.user });
+        const user = await this.db.UserModel.findOne({ _id: dto.user });
         await this.db.UserModel.updateOne(
-            { user: dto.user },
+            { _id: dto.user },
             { balance: user['balance'] - dto.amount },
         );
 
@@ -21,10 +29,21 @@ export class ExpenseService {
     async getAll(userId: string, category?: string) {
         const filter: any = { user: userId };
         if (category) {
+            if (!Types.ObjectId.isValid(category!))
+                throw new BadRequestException(
+                    'Expense category id is invalid!',
+                );
+
+            const check = await this.db.ExpenseCategoryModel.findOne({
+                _id: category,
+            });
+            if (!check)
+                throw new NotFoundException('Expense category not found!');
+
             filter.category = category;
         }
 
-        return await this.db.IncomeModel.find(filter);
+        return await this.db.ExpenseModel.find(filter);
     }
 
     async getByDate(userId: string, from: Date, to: Date) {
@@ -47,8 +66,11 @@ export class ExpenseService {
         if (!expense) throw new NotFoundException('Expense not found!');
 
         if (dto.category) {
-            const category = await this.db.ExpenseCategoryModel.findOne({_id: id});
-            if (!category) throw new NotFoundException("Expense category not found!");
+            const category = await this.db.ExpenseCategoryModel.findOne({
+                _id: id,
+            });
+            if (!category)
+                throw new NotFoundException('Expense category not found!');
         }
 
         if (dto.amount) {

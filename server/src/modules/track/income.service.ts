@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
+import { Types } from 'mongoose';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
 
 @Injectable()
@@ -12,9 +17,9 @@ export class IncomeService {
         if (!category)
             throw new NotFoundException('Income category not found!');
 
-        const user = await this.db.UserModel.find({ _id: dto.user });
+        const user = await this.db.UserModel.findOne({ _id: dto.user });
         await this.db.UserModel.updateOne(
-            { user: dto.user },
+            { _id: dto.user },
             { balance: user['balance'] + dto.amount },
         );
 
@@ -24,6 +29,15 @@ export class IncomeService {
     async getAll(userId: string, category?: string) {
         const filter: any = { user: userId };
         if (category) {
+            if (!Types.ObjectId.isValid(category!))
+                throw new BadRequestException('Income category id is invalid!');
+
+            const check = await this.db.IncomeCategoryModel.findOne({
+                _id: category,
+            });
+            if (!check)
+                throw new NotFoundException('Income category not found!');
+
             filter.category = category;
         }
 
