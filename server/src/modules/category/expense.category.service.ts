@@ -9,6 +9,7 @@ import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
 @Injectable()
 export class ExpenseCategoryService {
     constructor(private db: MongoDBService) {}
+
     async create(name: string, userId: string) {
         const category = await this.db.ExpenseCategoryModel.findOne({
             name,
@@ -19,12 +20,9 @@ export class ExpenseCategoryService {
                 'Expense category with this name already exists!',
             );
 
-        await this.db.ExpenseCategoryModel.create({ name, user: userId });
-
-        return {
-            message: 'success',
-        };
+        return await this.db.ExpenseCategoryModel.create({ name, user: userId });
     }
+
     async get(userId: string) {
         const categories = await this.db.ExpenseCategoryModel.find({
             user: userId,
@@ -32,6 +30,7 @@ export class ExpenseCategoryService {
 
         return categories;
     }
+
     async update(id: string, userId: string, newName: string) {
         const existingCategory = await this.db.ExpenseCategoryModel.findOne({
             _id: id,
@@ -49,15 +48,12 @@ export class ExpenseCategoryService {
                 'Expense category with the new name already exists!',
             );
 
-        await this.db.ExpenseCategoryModel.updateOne(
+        return await this.db.ExpenseCategoryModel.updateOne(
             { _id: id },
             { name: newName },
         );
-
-        return {
-            message: 'success',
-        };
     }
+
     async delete(id: string) {
         const category = await this.db.ExpenseCategoryModel.findOne({
             _id: id,
@@ -68,9 +64,10 @@ export class ExpenseCategoryService {
             );
 
         await this.db.ExpenseCategoryModel.deleteOne({ _id: id });
+        await this.db.ExpenseModel.deleteMany({category: id});
 
         return {
-            message: 'success',
+            message: 'Expense category deleted successfully!',
         };
     }
 }

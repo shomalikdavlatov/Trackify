@@ -9,14 +9,17 @@ import { ExpenseCategoryUpdateDto } from "./dto/expense.category.update.dto";
 @UseGuards(AuthGuard('jwt'))
 export class ExpenseCategoryController {
     constructor(private service: ExpenseCategoryService) {}
+
     @Post()
     async create(@Body() body: ExpenseCategoryCreateDto, @Req() req: Request) {
         return await this.service.create(body.name, req['user']['userId']);
     }
+
     @Get()
     async get(@Req() req: Request) {
         return await this.service.get(req['user']['userId']);
     }
+
     @Put(":id")
     async update(@Param('id') id: string, @Body() body: ExpenseCategoryUpdateDto, @Req() req: Request) {
         return await this.service.update(
@@ -25,6 +28,7 @@ export class ExpenseCategoryController {
             body.name,
         );
     }
+    
     @Delete(":id")
     async delete(@Param('id') id: string, @Req() req: Request) {
         return await this.service.delete(id);
