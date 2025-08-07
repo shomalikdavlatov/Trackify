@@ -11,11 +11,17 @@ export class ExpenseService {
             { user: dto.user },
             { balance: user['balance'] - dto.amount },
         );
+
         return await this.db.ExpenseModel.create(dto);
     }
 
-    async getAll(userId: string) {
-        return await this.db.ExpenseModel.find({ user: userId });
+    async getAll(userId: string, category?: string) {
+        const filter: any = { user: userId };
+        if (category) {
+            filter.category = category;
+        }
+        
+        return await this.db.IncomeModel.find(filter);
     }
 
     async getByDate(userId: string, from: Date, to: Date) {

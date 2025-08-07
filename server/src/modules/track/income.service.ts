@@ -11,11 +11,17 @@ export class IncomeService {
             { user: dto.user },
             { balance: user['balance'] + dto.amount },
         );
+
         return await this.db.IncomeModel.create(dto);
     }
 
-    async getAll(userId: string) {
-        return await this.db.IncomeModel.find({ user: userId });
+    async getAll(userId: string, category?: string) {
+        const filter: any = { user: userId };
+        if (category) {
+            filter.category = category;
+        }
+        
+        return await this.db.IncomeModel.find(filter);
     }
 
     async getByDate(userId: string, from: Date, to: Date) {
@@ -59,7 +65,7 @@ export class IncomeService {
         );
 
         return {
-            message: "Income deleted successfully!"
-        }
+            message: 'Income deleted successfully!',
+        };
     }
 }

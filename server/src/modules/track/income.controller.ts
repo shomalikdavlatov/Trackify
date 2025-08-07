@@ -31,6 +31,7 @@ export class IncomeController {
     @Get()
     async get(
         @Req() req: Request,
+        @Query('category') category?: string,
         @Query('from') from?: string,
         @Query('to') to?: string,
         @Query('thisMonth') thisMonth?: string,
@@ -45,7 +46,7 @@ export class IncomeController {
             return this.service.getByDate(userId, new Date(from), new Date(to));
         }
 
-        return this.service.getAll(userId);
+        return this.service.getAll(userId, category);
     }
 
     @Patch(':id')
