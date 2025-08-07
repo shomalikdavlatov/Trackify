@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
-import { CreateIncomeDto } from './dto/income.create.dto';
-import { UpdateIncomeDto } from './dto/income.update.dto';
 
 @Injectable()
 export class IncomeService {
     constructor(private db: MongoDBService) {}
 
     async create(dto: any) {
+        const user = await this.db.UserModel.find({ _id: dto.user });
+        await this.db.UserModel.updateOne(
+            { user: dto.user },
+            { balance: user['balance'] + dto.amount },
+        );
         return await this.db.IncomeModel.create(dto);
     }
 
@@ -26,20 +29,37 @@ export class IncomeService {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
         return await this.getByDate(userId, firstDay, lastDay);
     }
 
     async update(id: string, dto: any) {
-        const updated = await this.db.IncomeModel.findByIdAndUpdate(id, dto, {
-            new: true,
-        });
-        if (!updated) throw new NotFoundException('Income not found');
-        return updated;
+        const income = await this.db.IncomeModel.findOne({ _id: id });
+        if (!income) throw new NotFoundException('Income not found');
+
+        if (dto.amount) {
+            const user = await this.db.UserModel.findOne({ _id: dto.user });
+            await this.db.UserModel.updateOne(
+                { _id: dto.user },
+                { balance: user.balance - income.amount + dto.amount },
+            );
+        }
+
+        return await this.db.IncomeModel.updateOne({ _id: id }, dto);
     }
 
-    async delete(id: string) {
-        const result = await this.db.IncomeModel.findByIdAndDelete(id);
-        if (!result) throw new NotFoundException('Income not found');
-        return result;
+    async delete(id: string, userId: string) {
+        const income = await this.db.IncomeModel.findOne({ _id: id });
+        if (!income) throw new NotFoundException('Income not found');
+
+        const user = await this.db.UserModel.findOne({ _id: userId });
+        await this.db.UserModel.updateOne(
+            { _id: userId },
+            { balance: user.balance - income.amount },
+        );
+
+        return {
+            message: "Income deleted successfully!"
+        }
     }
 }

@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsMongoId } from 'class-validator';
+import { IsOptional, IsNumber, IsMongoId, Min } from 'class-validator';
 
 export class UpdateIncomeDto {
     @IsOptional()
@@ -6,6 +6,7 @@ export class UpdateIncomeDto {
 
     @IsOptional()
     @IsNumber()
+    @Min(1, { message: 'Amount must be greater than 0' })
     amount?: number;
 
     @IsOptional()

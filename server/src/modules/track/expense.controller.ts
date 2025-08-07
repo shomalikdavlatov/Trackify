@@ -23,12 +23,13 @@ export class ExpenseController {
 
     @Post()
     async create(@Body() dto: CreateExpenseDto, @Req() req: Request) {
+        console.log(dto);
         const userId = req['user']['userId'];
         return this.service.create({ ...dto, user: userId });
     }
 
     @Get()
-    async getExpenses(
+    async get(
         @Req() req: Request,
         @Query('from') from?: string,
         @Query('to') to?: string,
@@ -41,11 +42,7 @@ export class ExpenseController {
         }
 
         if (from && to) {
-            return this.service.getByDate(
-                userId,
-                new Date(from),
-                new Date(to),
-            );
+            return this.service.getByDate(userId, new Date(from), new Date(to));
         }
 
         return this.service.getAll(userId);
@@ -63,6 +60,7 @@ export class ExpenseController {
 
     @Delete(':id')
     async delete(@Param('id') id: string, @Req() req: Request) {
-        return this.service.delete(id);
+        const userId = req['user']['userId'];
+        return this.service.delete(id, userId);
     }
 }

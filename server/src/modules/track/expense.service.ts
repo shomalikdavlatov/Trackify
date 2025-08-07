@@ -6,6 +6,11 @@ export class ExpenseService {
     constructor(private db: MongoDBService) {}
 
     async create(dto: any) {
+        const user = await this.db.UserModel.find({ _id: dto.user });
+        await this.db.UserModel.updateOne(
+            { user: dto.user },
+            { balance: user['balance'] - dto.amount },
+        );
         return await this.db.ExpenseModel.create(dto);
     }
 
@@ -24,20 +29,37 @@ export class ExpenseService {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
         return await this.getByDate(userId, firstDay, lastDay);
     }
 
     async update(id: string, dto: any) {
-        const updated = await this.db.ExpenseModel.findByIdAndUpdate(id, dto, {
-            new: true,
-        });
-        if (!updated) throw new NotFoundException('Expense not found');
-        return updated;
+        const expense = await this.db.ExpenseModel.findOne({ _id: id });
+        if (!expense) throw new NotFoundException('Expense not found');
+
+        if (dto.amount) {
+            const user = await this.db.UserModel.findOne({ _id: dto.user });
+            await this.db.UserModel.updateOne(
+                { _id: dto.user },
+                { balance: user.balance + expense.amount - dto.amount },
+            );
+        }
+
+        return await this.db.ExpenseModel.updateOne({ _id: id }, dto);
     }
 
-    async delete(id: string) {
-        const result = await this.db.ExpenseModel.findByIdAndDelete(id);
-        if (!result) throw new NotFoundException('Expense not found');
-        return result;
+    async delete(id: string, userId: string) {
+        const expense = await this.db.ExpenseModel.findOne({ _id: id });
+        if (!expense) throw new NotFoundException('Expense not found');
+
+        const user = await this.db.UserModel.findOne({ _id: userId });
+        await this.db.UserModel.updateOne(
+            { _id: userId },
+            { balance: user.balance + expense.amount },
+        );
+
+        return {
+            message: 'Expense deleted successfully!',
+        };
     }
 }
