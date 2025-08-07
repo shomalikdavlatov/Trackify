@@ -35,12 +35,20 @@ export class ExpenseCategoryService {
     async update(name: string, userId: string, newName: string) {
         const category = await this.db.ExpenseCategoryModel.findOne({
             name: newName,
+            user: userId,
         });
         if (category)
             throw new BadRequestException(
                 'Expense category with the new name already exists!',
             );
 
+        const existingCategory = await this.db.ExpenseCategoryModel.findOne({
+            name,
+            user: userId,
+        });
+        if (!existingCategory) {
+            throw new NotFoundException('Original expense category not found.');
+        }
         await this.db.ExpenseCategoryModel.updateOne(
             { name, user: userId },
             { name: newName },

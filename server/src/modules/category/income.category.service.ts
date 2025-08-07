@@ -35,7 +35,15 @@ export class IncomeCategoryService {
     async update(name: string, userId: string, newName: string) {
         const category = await this.db.IncomeCategoryModel.findOne({
             name: newName,
+            user: userId,
         });
+        const existingCategory = await this.db.IncomeCategoryModel.findOne({
+            name,
+            user: userId,
+        });
+        if (!existingCategory) {
+            throw new NotFoundException('Original income category not found.');
+        }
         if (category)
             throw new BadRequestException(
                 'Income category with the new name already exists!',
