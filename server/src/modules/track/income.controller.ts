@@ -23,8 +23,8 @@ export class IncomeController {
 
     @Post()
     async create(@Body() dto: CreateIncomeDto, @Req() req: Request) {
-        console.log(dto);
         const userId = req['user']['userId'];
+
         return this.service.create({ ...dto, user: userId });
     }
 
@@ -56,12 +56,14 @@ export class IncomeController {
         @Req() req: Request,
     ) {
         const userId = req['user']['userId'];
+
         return this.service.update(id, { ...dto, user: userId });
     }
 
     @Delete(':id')
     async delete(@Param('id') id: string, @Req() req: Request) {
         const userId = req['user']['userId'];
+        
         return this.service.delete(id, userId);
     }
 }

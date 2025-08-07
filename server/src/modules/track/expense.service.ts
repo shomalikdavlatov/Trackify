@@ -6,6 +6,9 @@ export class ExpenseService {
     constructor(private db: MongoDBService) {}
 
     async create(dto: any) {
+        const category = await this.db.ExpenseCategoryModel.findOne({_id: dto.category});
+        if (!category) throw new NotFoundException("Expense category not found!");
+
         const user = await this.db.UserModel.find({ _id: dto.user });
         await this.db.UserModel.updateOne(
             { user: dto.user },
@@ -20,7 +23,7 @@ export class ExpenseService {
         if (category) {
             filter.category = category;
         }
-        
+
         return await this.db.IncomeModel.find(filter);
     }
 
@@ -41,7 +44,12 @@ export class ExpenseService {
 
     async update(id: string, dto: any) {
         const expense = await this.db.ExpenseModel.findOne({ _id: id });
-        if (!expense) throw new NotFoundException('Expense not found');
+        if (!expense) throw new NotFoundException('Expense not found!');
+
+        if (dto.category) {
+            const category = await this.db.ExpenseCategoryModel.findOne({_id: id});
+            if (!category) throw new NotFoundException("Expense category not found!");
+        }
 
         if (dto.amount) {
             const user = await this.db.UserModel.findOne({ _id: dto.user });
@@ -56,7 +64,7 @@ export class ExpenseService {
 
     async delete(id: string, userId: string) {
         const expense = await this.db.ExpenseModel.findOne({ _id: id });
-        if (!expense) throw new NotFoundException('Expense not found');
+        if (!expense) throw new NotFoundException('Expense not found!');
 
         const user = await this.db.UserModel.findOne({ _id: userId });
         await this.db.UserModel.updateOne(
