@@ -17,16 +17,16 @@ export class ExpenseCategoryController {
     async get(@Req() req: Request) {
         return await this.service.get(req['user']['userId']);
     }
-    @Put(":name")
-    async update(@Param('name') name: string, @Body() body: ExpenseCategoryUpdateDto, @Req() req: Request) {
+    @Put(":id")
+    async update(@Param('id') id: string, @Body() body: ExpenseCategoryUpdateDto, @Req() req: Request) {
         return await this.service.update(
-            name,
+            id,
             req['user']['userId'],
             body.name,
         );
     }
-    @Delete(":name")
-    async delete(@Param('name') name: string, @Req() req: Request) {
-        return await this.service.delete(name, req['user']['userId']);
+    @Delete(":id")
+    async delete(@Param('id') id: string, @Req() req: Request) {
+        return await this.service.delete(id);
     }
 }

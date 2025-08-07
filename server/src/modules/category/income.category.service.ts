@@ -30,27 +30,27 @@ export class IncomeCategoryService {
             user: userId,
         });
 
-        return categories.map((category) => category.name);
+        return categories;
     }
-    async update(name: string, userId: string, newName: string) {
-        const category = await this.db.IncomeCategoryModel.findOne({
-            name: newName,
-            user: userId,
-        });
+    async update(id: string, userId: string, newName: string) {
         const existingCategory = await this.db.IncomeCategoryModel.findOne({
-            name,
-            user: userId,
+            _id: id,
         });
         if (!existingCategory) {
             throw new NotFoundException('Original income category not found.');
         }
+
+        const category = await this.db.IncomeCategoryModel.findOne({
+            name: newName,
+            user: userId,
+        });
         if (category)
             throw new BadRequestException(
                 'Income category with the new name already exists!',
             );
 
         await this.db.IncomeCategoryModel.updateOne(
-            { name, user: userId },
+            { _id: id },
             { name: newName },
         );
 
@@ -58,17 +58,16 @@ export class IncomeCategoryService {
             message: 'success',
         };
     }
-    async delete(name: string, userId: string) {
+    async delete(id: string) {
         const category = await this.db.IncomeCategoryModel.findOne({
-            name,
-            user: userId,
+            _id: id,
         });
         if (!category)
             throw new NotFoundException(
-                'Income category with the specified name not found!',
+                'Income category with the specified id not found!',
             );
 
-        await this.db.IncomeCategoryModel.deleteOne({ name, user: userId });
+        await this.db.IncomeCategoryModel.deleteOne({ _id: id });
 
         return {
             message: 'success',
