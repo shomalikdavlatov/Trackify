@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { CategoryService } from './category.service';
-import { CategoryController } from './category.controller';
 import { CoreModule } from 'src/core/core.module';
+import { IncomeCategoryController } from './income.category.controller';
+import { ExpenseCategoryController } from './expense.category.controller';
+import { IncomeCategoryService } from './income.category.service';
+import { ExpenseCategoryService } from './expense.category.service';
 
 @Module({
   imports: [CoreModule],
-  controllers: [CategoryController],
-  providers: [CategoryService],
+  controllers: [IncomeCategoryController, ExpenseCategoryController],
+  providers: [IncomeCategoryService, ExpenseCategoryService],
 })
 export class CategoryModule {}

@@ -4,8 +4,8 @@ import { UserSchema } from './schemas/user.schema';
 import { ConfigService } from '@nestjs/config';
 import { IncomeSchema } from './schemas/income.schema';
 import { ExpenseSchema } from './schemas/expense.schema';
-import { IncomeCategorySchema } from './schemas/incomeCategory.schema';
-import { ExpenseCategorySchema } from './schemas/expenseCategory.schema';
+import { IncomeCategorySchema } from './schemas/income.category.schema';
+import { ExpenseCategorySchema } from './schemas/expense.category.schema';
 
 @Injectable()
 export class MongoDBService implements OnModuleInit {
