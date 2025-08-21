@@ -1,0 +1,85 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verification Code</title>
+    <style>
+      /* General Styles */
+      body {
+        background-color: #f4f7fc;
+        font-family: 'Roboto', Arial, sans-serif;
+        padding: 40px 0;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 420px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        font-size: 16px;
+      }
+
+      .code {
+        font-size: 36px;
+        font-weight: 600;
+        letter-spacing: 8px;
+        background-color: #f7f7f7;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        display: inline-block;
+        color: #444;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .message {
+        font-size: 14px;
+        color: #888;
+        margin-top: 10px;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      /* Button (optional) */
+      .resend-button {
+        font-size: 14px;
+        color: #4caf50;
+        text-decoration: none;
+        margin-top: 20px;
+        display: block;
+      }
+
+      .resend-button:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive */
+      @media (max-width: 480px) {
+        .container {
+          padding: 30px;
+        }
+
+        .code {
+          font-size: 30px;
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="title">Verification Code</div>
+      <div class="code">{{code}}</div>
+      <div class="message">This code is valid for 10 minutes.</div>
+    </div>
+  </body>
+</html>

@@ -1,14 +1,24 @@
-// auth.service.ts
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+// src/modules/auth/auth.service.ts
+import {
+    ConflictException,
+    Injectable,
+    UnauthorizedException,
+    BadRequestException,
+    NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
+import { RedisService } from 'src/core/database/redis/redis.service';
+import { EmailService } from 'src/core/mailer/mailer.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
         private db: MongoDBService,
+        private redis: RedisService,
+        private emailService: EmailService,
     ) {}
 
     async validateUser(email: string, password: string) {
@@ -21,10 +31,21 @@ export class AuthService {
         return user;
     }
 
-    async register(email: string, password: string) {
+    async register(email: string, password: string, code: string) {
         const existingUser = await this.db.UserModel.findOne({ email });
         if (existingUser) {
             throw new ConflictException('Email already registered');
+        }
+
+        const key = `register:${email}`;
+        const stored = await this.redis.get(key);
+        if (!stored) {
+            throw new BadRequestException(
+                'Verification code expired or not sent',
+            );
+        }
+        if (stored !== code.trim()) {
+            throw new BadRequestException('Invalid verification code');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -32,19 +53,24 @@ export class AuthService {
         const newUser = await this.db.UserModel.create({
             email,
             password: hashedPassword,
+            balance: 0,
         });
+
+        await this.redis.del(key);
 
         return { message: 'Registered successfully', userId: newUser._id };
     }
 
     async login(user: any, res: any) {
-        const payload = { sub: user._id, email: user.email };
+        const payload = { id: user._id, email: user.email };
         const token = this.jwtService.sign(payload);
 
         res.cookie('auth_token', token, {
             httpOnly: true,
-            secure: false, 
+            secure: false,
             maxAge: 24 * 60 * 60 * 1000,
+            path: '/',
+            sameSite: 'lax'
         });
 
         return { message: 'Logged in successfully' };
@@ -52,6 +78,63 @@ export class AuthService {
 
     async logout(res: any) {
         res.clearCookie('auth_token');
-        return { message: 'Logged out' };
+        return { message: 'Logged out successfully' };
+    }
+
+    private generateCode() {
+        return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+    }
+
+    async sendRegisterCode(email: string) {
+        const existingUser = await this.db.UserModel.findOne({ email });
+        if (existingUser) {
+            throw new ConflictException('Email already registered');
+        }
+        const code = this.generateCode();
+        const key = `register:${email}`;
+        // 10 minutes TTL
+        await this.redis.set(key, code, +(process.env.VERIFICATION_TTL as string));
+        await this.emailService.sendVerificationCode(email, 'register', code);
+        return { message: 'Verification code sent' };
+    }
+
+    // Send reset code for forgot-password
+    async sendResetCode(email: string) {
+        const user = await this.db.UserModel.findOne({ email });
+        if (!user) {
+            // to avoid leaking existence, you might still return success.
+            // Here we return NotFound so frontend can show helpful message — adjust as you want.
+            throw new NotFoundException('No account with that email');
+        }
+        const code = this.generateCode();
+        const key = `reset:${email}`;
+        await this.redis.set(
+            key,
+            code,
+            +(process.env.VERIFICATION_TTL as string),
+        );
+        await this.emailService.sendVerificationCode(email, 'reset', code);
+        return { message: 'Reset code sent' };
+    }
+
+    // Check code (generic)
+    async checkCode(email: string, code: string, type: 'register' | 'reset') {
+        const key = `${type}:${email}`;
+        const stored = await this.redis.get(key);
+        if (!stored) throw new BadRequestException('Code expired or not found');
+        if (stored !== code) throw new BadRequestException('Invalid code');
+        return { ok: true };
+    }
+
+    // Reset password after verifying code
+    async resetPassword(email: string, code: string, newPassword: string) {
+        await this.checkCode(email, code, 'reset');
+        const user = await this.db.UserModel.findOne({ email });
+        if (!user) throw new NotFoundException('User not found');
+        const hashed = await bcrypt.hash(newPassword, 10);
+        user.password = hashed;
+        await user.save();
+        await this.redis.del(`reset:${email}`);
+        return { message: 'Password reset successfully' };
     }
 }
