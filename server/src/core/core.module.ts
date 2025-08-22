@@ -1,13 +1,14 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { DatabaseModule } from "./database/database.module";
 import { ConfigModule } from '@nestjs/config';
 
+@Global()
 @Module({
     imports: [
         DatabaseModule,
         ConfigModule.forRoot({
-            isGlobal: true, // 👈 makes it global
-            envFilePath: '.env', // optional, default is .env
+            isGlobal: true,
+            envFilePath: '.env',
         }),
     ],
     exports: [DatabaseModule],

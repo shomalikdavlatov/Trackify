@@ -12,7 +12,6 @@ import { EmailModule } from 'src/core/mailer/mailer.module';
 
 @Module({
     imports: [
-        CoreModule,
         PassportModule,
         ConfigModule,
         RedisModule,

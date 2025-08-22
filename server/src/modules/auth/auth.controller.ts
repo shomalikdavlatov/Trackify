@@ -1,7 +1,9 @@
 // src/modules/auth/auth.controller.ts
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
+import { decodeJWT } from 'src/common/utils/functions';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -66,7 +68,9 @@ export class AuthController {
     }
 
     @Get('me')
+    @UseGuards(AuthGuard('jwt'))
     me(@Req() req: Request) {
+        // console.log(decodeJWT(req.cookies.auth_token));
         const token = (req as any).cookies?.auth_token;
         if (!token) {
             throw new UnauthorizedException();
