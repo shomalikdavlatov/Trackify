@@ -22,6 +22,10 @@ export const sendResetCode = (email: string) => {
     return axios.post(`${API_BASE}/auth/send-reset-code`, { email });
 };
 
+export const checkCode = (email: string, code: string, type: "register" | "reset") => {
+    return axios.post(`${API_BASE}/auth/check-code`, { email, code, type });
+};
+
 export const me = () => {
     return axios.get(`${API_BASE}/auth/me`, { withCredentials: true });
 };
@@ -29,11 +33,11 @@ export const me = () => {
 export const resetPassword = (
     email: string,
     code: string,
-    password: string
+    newPassword: string
 ) => {
     return axios.post(`${API_BASE}/auth/reset-password`, {
         email,
         code,
-        password,
+        newPassword,
     });
 };

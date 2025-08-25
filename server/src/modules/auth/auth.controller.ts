@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { decodeJWT } from 'src/common/utils/functions';
 import { AuthGuard } from '@nestjs/passport';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -48,7 +49,7 @@ export class AuthController {
 
     @Post('reset-password')
     async resetPassword(
-        @Body() body: { email: string; code: string; newPassword: string },
+        @Body() body: ResetPasswordDto,
     ) {
         const { email, code, newPassword } = body;
         return this.authService.resetPassword(email, code, newPassword);
@@ -70,7 +71,6 @@ export class AuthController {
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
     me(@Req() req: Request) {
-        // console.log(decodeJWT(req.cookies.auth_token));
         const token = (req as any).cookies?.auth_token;
         if (!token) {
             throw new UnauthorizedException();

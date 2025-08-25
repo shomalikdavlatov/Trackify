@@ -9,8 +9,7 @@ export class UserController {
 
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    async getUserData(@Req() req: Request) {
-        console.log(req.cookies);
-        // return this.userService.getUserData(userId);
+    async getUserData(@Req() req: Request) { 
+        return await this.userService.getUserData(req.cookies?.auth_token);
     }
 }

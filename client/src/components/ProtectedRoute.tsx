@@ -13,7 +13,8 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
         const checkAuth = async () => {
             try {
                 const res = await me();
-                await getUserData();
+                const data = await getUserData();
+                console.log(data.data);
 
                 if (res.status === 200) {
                     setIsAuthenticated(true);

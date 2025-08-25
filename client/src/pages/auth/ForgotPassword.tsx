@@ -2,82 +2,204 @@ import React, { useState } from "react";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import CodeInput from "../../components/CodeInput";
-import { sendResetCode, resetPassword } from "../../api/auth";
+import { sendResetCode, resetPassword, checkCode } from "../../api/auth";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
+const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
-    const [code, setCode] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
     const [codeSent, setCodeSent] = useState(false);
     const [codeVerified, setCodeVerified] = useState(false);
 
+    const [code, setCode] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    const [sendingCode, setSendingCode] = useState(false);
+    const [verifying, setVerifying] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    const navigate = useNavigate();
+
+    const getErr = (err: any) =>
+        err?.response?.data?.message || err?.message || "Something went wrong.";
+
     const handleSendCode = async () => {
-        try {
-            await sendResetCode(email);
-            setCodeSent(true);
-        } catch (err) {
-            console.error(err);
+        if (!email.trim()) {
+            toast.error("Email is required.");
+            return;
         }
-    };
-
-    const handleVerifyCode = () => {
-        // Normally verify code via API; here we just simulate
-        if (code.length > 0) {
-            setCodeVerified(true);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (password !== confirmPassword) {
-            alert("Passwords do not match");
+        if (!validateEmail(email)) {
+            toast.error("Please enter a valid email address.");
             return;
         }
         try {
-            await resetPassword(email, code, password);
-            alert("Password reset successful!");
-        } catch (err) {
-            console.error(err);
+            setSendingCode(true);
+            await sendResetCode(email.trim());
+            setCodeSent(true);
+            toast.success("Verification code sent to your email.");
+        } catch (err: any) {
+            toast.error(String(getErr(err)));
+        } finally {
+            setSendingCode(false);
+        }
+    };
+
+    const handleVerifyCode = async () => {
+        if (!code.trim()) {
+            toast.error("Please enter the verification code.");
+            return;
+        }
+        try {
+            setVerifying(true);
+            // If you have an API like verifyResetCode(email, code), call it here.
+            await checkCode(email.trim(), code.trim(), "reset");
+            setCodeVerified(true);
+            toast.success("Code verified. You can set a new password.");
+        } catch (err: any) {
+            toast.error(String(getErr(err)));
+        } finally {
+            setVerifying(false);
+        }
+    };
+
+    const validateReset = () => {
+        if (
+            !email.trim() ||
+            !code.trim() ||
+            !password.trim() ||
+            !confirmPassword.trim()
+        ) {
+            toast.error("Please fill in all required fields.");
+            return false;
+        }
+        if (!validateEmail(email)) {
+            toast.error("Please enter a valid email address.");
+            return false;
+        }
+        if (password.length < 6) {
+            toast.error("Password must be at least 6 characters.");
+            return false;
+        }
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match.");
+            return false;
+        }
+        return true;
+    };
+
+    const handleResetPassword = async () => {
+        if (!validateReset()) return;
+        try {
+            setSubmitting(true);
+            await resetPassword(email.trim(), code.trim(), password);
+            toast.success("Password reset successful! You can now log in.");
+            // Optional: clear state
+            setCode("");
+            setPassword("");
+            setConfirmPassword("");
+            setCodeSent(false);
+            setCodeVerified(false);
+            navigate("/auth/login");
+        } catch (err: any) {
+            toast.error(String(getErr(err)));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Unified Enter-to-submit behavior like your Register page
+    const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
+        e.preventDefault();
+        if (!codeSent) {
+            await handleSendCode();
+        } else if (codeSent && !codeVerified) {
+            await handleVerifyCode();
+        } else {
+            await handleResetPassword();
         }
     };
 
     return (
         <div className="max-w-md mx-auto mt-48 p-6 border rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-4">Forgot Password</h2>
-            <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
 
-            {!codeSent && <Button label="Send Code" onClick={handleSendCode} />}
-            {codeSent && !codeVerified && (
-                <>
-                    <CodeInput value={code} onChange={setCode} />
-                    <Button label="Check Code" onClick={handleVerifyCode} />
-                </>
-            )}
-            {codeVerified && (
-                <>
-                    <Input
-                        label="New Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <Input
-                        label="Confirm Password"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
+            <form onSubmit={onSubmit} noValidate>
+                <Input
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setEmail(e.target.value)
+                    }
+                    required
+                />
+
+                {!codeSent && (
                     <Button
-                        label="Reset Password"
-                        onClick={handleResetPassword}
+                        label={sendingCode ? "Sending..." : "Send Code"}
+                        onClick={(e?: any) => {
+                            e?.preventDefault?.();
+                            handleSendCode();
+                        }}
+                        disabled={sendingCode}
+                        // If your Button supports "type", prevent form submit:
+                        // type="button"
                     />
-                </>
-            )}
+                )}
+
+                {codeSent && !codeVerified && (
+                    <>
+                        <CodeInput value={code} onChange={setCode} />
+                        <Button
+                            label={verifying ? "Checking..." : "Check Code"}
+                            onClick={(e?: any) => {
+                                e?.preventDefault?.();
+                                handleVerifyCode();
+                            }}
+                            disabled={verifying}
+                            // type="button"
+                        />
+                        {/* Hidden submit to keep Enter-to-submit working */}
+                        <button type="submit" className="hidden" aria-hidden />
+                    </>
+                )}
+
+                {codeVerified && (
+                    <>
+                        <Input
+                            label="New Password"
+                            type="password"
+                            value={password}
+                            onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>
+                            ) => setPassword(e.target.value)}
+                            required
+                        />
+                        <Input
+                            label="Confirm Password"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>
+                            ) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                        <Button
+                            label={
+                                submitting ? "Resetting..." : "Reset Password"
+                            }
+                            onClick={() => {}}
+                            disabled={submitting}
+                            // Prefer type="submit" if supported by your Button:
+                            // type="submit"
+                        />
+                        <button type="submit" className="hidden" aria-hidden />
+                    </>
+                )}
+            </form>
         </div>
     );
 };
