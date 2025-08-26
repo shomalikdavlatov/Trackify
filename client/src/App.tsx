@@ -22,7 +22,7 @@ const App: React.FC = () => {
                     element={<ForgotPassword />}
                 />
                 <Route
-                    path="/"
+                    path="/*"
                     element={
                         <ProtectedRoute>
                             <Index />

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Input from "../../components/Input";
-import Button from "../../components/Button";
+import Button from "../../components/AuthButton";
 import CodeInput from "../../components/CodeInput";
 import { sendResetCode, resetPassword, checkCode } from "../../api/auth";
 import { toast } from "react-toastify";

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, type JSX } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {     me } from "../api/auth";
+import { me } from "../api/auth";
 import { getUserData } from "../api/user";
 
 const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {

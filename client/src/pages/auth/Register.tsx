@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { registerUser, sendVerificationCode } from "../../api/auth";
 import Input from "../../components/Input";
-import Button from "../../components/Button";
+import Button from "../../components/AuthButton";
 import CodeInput from "../../components/CodeInput";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
