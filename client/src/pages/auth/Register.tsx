@@ -5,6 +5,7 @@ import Button from "../../components/Button";
 import CodeInput from "../../components/CodeInput";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { validateEmail } from "../../utils/functions";
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -19,8 +20,6 @@ const Register: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
     const handleSendCode = async () => {
         if (!email.trim()) {
             toast.error("Email is required.");
@@ -32,7 +31,7 @@ const Register: React.FC = () => {
         }
         try {
             setSendingCode(true);
-            // Make sure sendVerificationCode includes credentials if your backend sets cookies
+    
             await sendVerificationCode(email);
             setCodeSent(true);
             toast.success("Verification code sent to your email.");
@@ -69,15 +68,12 @@ const Register: React.FC = () => {
             toast.error("Passwords do not match.");
             return false;
         }
-        // Optional: ensure code is numeric/length-limited if your CodeInput enforces it
-        // if (!/^\d{6}$/.test(code)) { toast.error("Code must be 6 digits."); return false; }
         return true;
     };
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
         e.preventDefault();
-        if (!codeSent) {
-            // If user hits Enter before sending code, we just try to send it
+        if (!codeSent) {  
             await handleSendCode();
             return;
         }
@@ -85,7 +81,7 @@ const Register: React.FC = () => {
 
         try {
             setSubmitting(true);
-            // Ensure registerUser sends credentials (withCredentials/include) if needed
+    
             await registerUser(email, password, code);
             toast.success("Account created successfully!");
             navigate("/auth/login");
@@ -103,8 +99,6 @@ const Register: React.FC = () => {
     return (
         <div className="max-w-md mx-auto mt-48 p-6 border rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-4">Register</h2>
-
-            {/* Form enables Enter-to-submit */}
             <form onSubmit={onSubmit} noValidate>
                 <Input
                     label="Email"
@@ -115,7 +109,6 @@ const Register: React.FC = () => {
                     }
                     required
                 />
-
                 {!codeSent ? (
                     <Button
                         label={sendingCode ? "Sending..." : "Send Code"}
@@ -124,8 +117,8 @@ const Register: React.FC = () => {
                             handleSendCode();
                         }}
                         disabled={sendingCode}
-                        // If your Button supports `type`, make it "button" so it doesn't submit the form:
-                        // type="button"
+                
+                
                     />
                 ) : (
                     <>
@@ -153,16 +146,13 @@ const Register: React.FC = () => {
                             label={submitting ? "Creating..." : "Register"}
                             onClick={() => {}}
                             disabled={submitting}
-                            // If your Button supports `type`, prefer:
-                            // type="submit"
+                    
+                    
                         />
-                        {/* If your Button doesn't forward `type="submit"`, keep a hidden submit button: */}
                         <button type="submit" className="hidden" aria-hidden />
                     </>
                 )}
             </form>
-
-            {/* Navigation Link */}
             <div className="mt-4 text-sm text-center">
                 <button
                     onClick={() => navigate("/auth/login")}

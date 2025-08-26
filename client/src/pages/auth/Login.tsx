@@ -4,6 +4,7 @@ import Button from "../../components/Button";
 import { loginUser } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { validateEmail } from "../../utils/functions";
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -16,9 +17,7 @@ const Login: React.FC = () => {
             toast.error("Please fill in all required fields.");
             return false;
         }
-        // simple email check (optional, keeps UX friendly)
-        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        if (!emailOk) {
+        if (!validateEmail(email)) {
             toast.error("Please enter a valid email address.");
             return false;
         }
@@ -26,16 +25,14 @@ const Login: React.FC = () => {
     };
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
-        e.preventDefault(); // prevent page reload
+        e.preventDefault(); 
         if (!validate()) return;
 
         try {
-            setSubmitting(true);
-            // Make sure your loginUser uses fetch/axios with { withCredentials:true } or credentials:"include"
+            setSubmitting(true); 
             await loginUser(email, password);
             navigate("/");
-        } catch (err: any) {
-            // Try to surface a meaningful backend message if present
+        } catch (err: any) {    
             const msg =
                 err?.response?.data?.message ||
                 err?.message ||
@@ -49,8 +46,6 @@ const Login: React.FC = () => {
     return (
         <div className="max-w-md mx-auto mt-48 p-6 border rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-4">Login</h2>
-
-            {/* Form enables Enter-to-submit */}
             <form onSubmit={onSubmit} noValidate>
                 <Input
                     label="Email"
@@ -77,13 +72,8 @@ const Login: React.FC = () => {
                     onClick={() => {}}
                     disabled={submitting}
                 />
-                {/* If your Button component requires type, ensure it's submit: */}
-                {/* <Button type="submit" ... /> */}
-                {/* If Button doesn't forward type, add a hidden submit: */}
                 <button type="submit" className="hidden" aria-hidden />
             </form>
-
-            {/* Navigation Links */}
             <div className="flex justify-between mt-4 text-sm">
                 <button
                     onClick={() => navigate("/auth/register")}

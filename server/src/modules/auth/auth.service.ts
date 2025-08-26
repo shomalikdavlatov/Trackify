@@ -1,4 +1,3 @@
-// src/modules/auth/auth.service.ts
 import {
     ConflictException,
     Injectable,
@@ -82,7 +81,7 @@ export class AuthService {
     }
 
     private generateCode() {
-        return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
     async sendRegisterCode(email: string) {
@@ -92,18 +91,15 @@ export class AuthService {
         }
         const code = this.generateCode();
         const key = `register:${email}`;
-        // 10 minutes TTL
+    
         await this.redis.set(key, code, +(process.env.VERIFICATION_TTL as string));
         await this.emailService.sendVerificationCode(email, 'register', code);
         return { message: 'Verification code sent' };
     }
 
-    // Send reset code for forgot-password
     async sendResetCode(email: string) {
         const user = await this.db.UserModel.findOne({ email });
         if (!user) {
-            // to avoid leaking existence, you might still return success.
-            // Here we return NotFound so frontend can show helpful message — adjust as you want.
             throw new NotFoundException('No account with that email');
         }
         const code = this.generateCode();
@@ -117,7 +113,7 @@ export class AuthService {
         return { message: 'Reset code sent' };
     }
 
-    // Check code (generic)
+
     async checkCode(email: string, code: string, type: 'register' | 'reset') {
         const key = `${type}:${email}`;
         const stored = await this.redis.get(key);
@@ -126,7 +122,6 @@ export class AuthService {
         return { ok: true };
     }
 
-    // Reset password after verifying code
     async resetPassword(email: string, code: string, newPassword: string) {
         await this.checkCode(email, code, 'reset');
         const user = await this.db.UserModel.findOne({ email });

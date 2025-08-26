@@ -7,7 +7,7 @@ import {
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
-import ProtectedRoute from "./components/ProtectedRoute"; // Import the ProtectedRoute component
+import ProtectedRoute from "./components/ProtectedRoute"; 
 import Index from "./pages/Index";
 import { ToastContainer } from "react-toastify";
 
@@ -15,15 +15,12 @@ const App: React.FC = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Auth Routes */}
                 <Route path="/auth/register" element={<Register />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route
                     path="/auth/forgot-password"
                     element={<ForgotPassword />}
                 />
-
-                {/* Protected Routes */}
                 <Route
                     path="/"
                     element={

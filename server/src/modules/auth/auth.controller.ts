@@ -1,8 +1,6 @@
-// src/modules/auth/auth.controller.ts
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
-import { decodeJWT } from 'src/common/utils/functions';
 import { AuthGuard } from '@nestjs/passport';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
@@ -15,7 +13,6 @@ export class AuthController {
         return this.authService.sendRegisterCode(body.email);
     }
 
-    // Client must pass email + password + code
     @Post('register')
     async register(
         @Body() body: { email: string; password: string; code: string },
@@ -41,7 +38,6 @@ export class AuthController {
         return this.authService.logout(res);
     }
 
-    // Reset / forgot password endpoints
     @Post('send-reset-code')
     async sendResetCode(@Body() body: { email: string }) {
         return this.authService.sendResetCode(body.email);
@@ -55,7 +51,6 @@ export class AuthController {
         return this.authService.resetPassword(email, code, newPassword);
     }
 
-    // Generic check (optional)
     @Post('check-code')
     async checkCode(
         @Body()

@@ -1,6 +1,5 @@
 import axios from "axios";
-
-export const API_BASE = "http://localhost:4000/api";
+import { API_BASE } from "./api";
 
 export const sendVerificationCode = (email: string) => {
     return axios.post(`${API_BASE}/auth/send-code`, { email });

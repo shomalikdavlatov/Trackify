@@ -5,8 +5,7 @@ import CodeInput from "../../components/CodeInput";
 import { sendResetCode, resetPassword, checkCode } from "../../api/auth";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
-const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+import { validateEmail } from "../../utils/functions";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -54,7 +53,6 @@ const ForgotPassword: React.FC = () => {
         }
         try {
             setVerifying(true);
-            // If you have an API like verifyResetCode(email, code), call it here.
             await checkCode(email.trim(), code.trim(), "reset");
             setCodeVerified(true);
             toast.success("Code verified. You can set a new password.");
@@ -96,7 +94,6 @@ const ForgotPassword: React.FC = () => {
             setSubmitting(true);
             await resetPassword(email.trim(), code.trim(), password);
             toast.success("Password reset successful! You can now log in.");
-            // Optional: clear state
             setCode("");
             setPassword("");
             setConfirmPassword("");
@@ -110,7 +107,6 @@ const ForgotPassword: React.FC = () => {
         }
     };
 
-    // Unified Enter-to-submit behavior like your Register page
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
         e.preventDefault();
         if (!codeSent) {
@@ -145,8 +141,6 @@ const ForgotPassword: React.FC = () => {
                             handleSendCode();
                         }}
                         disabled={sendingCode}
-                        // If your Button supports "type", prevent form submit:
-                        // type="button"
                     />
                 )}
 
@@ -160,9 +154,7 @@ const ForgotPassword: React.FC = () => {
                                 handleVerifyCode();
                             }}
                             disabled={verifying}
-                            // type="button"
                         />
-                        {/* Hidden submit to keep Enter-to-submit working */}
                         <button type="submit" className="hidden" aria-hidden />
                     </>
                 )}
@@ -193,8 +185,6 @@ const ForgotPassword: React.FC = () => {
                             }
                             onClick={() => {}}
                             disabled={submitting}
-                            // Prefer type="submit" if supported by your Button:
-                            // type="submit"
                         />
                         <button type="submit" className="hidden" aria-hidden />
                     </>
