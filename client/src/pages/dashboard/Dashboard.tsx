@@ -44,7 +44,21 @@ const mockTx: Transaction[] = [
         type: "expense",
         categoryId: "c4",
         amount: 50,
-        datetime: new Date(Date.now() - 864e5 * 12).toISOString(),
+        datetime: "2025-07-26T09:53:00.123Z",
+    },
+    {
+        id: "t5",
+        type: "income",
+        categoryId: "c2",
+        amount: 400,
+        datetime: "2025-07-26T09:53:00.123Z",
+    },
+    {
+        id: "t6",
+        type: "expense",
+        categoryId: "c4",
+        amount: 50,
+        datetime: "2025-07-26T09:53:00.123Z",
     },
 ];
 

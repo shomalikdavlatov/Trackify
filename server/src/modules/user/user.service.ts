@@ -7,18 +7,15 @@ export class UserService {
     constructor(private db: MongoDBService, private jwtService: JwtService) {}
 
     async getUserData(token: string) {
-        const {id, email} = this.jwtService.decode(token);
+        const {id} = this.jwtService.decode(token);
         const user = await this.db.UserModel.findById(id).select("balance email");
-        const incomes = await this.db.IncomeModel.find({user: user._id});
-        const expenses = await this.db.ExpenseModel.find({user: user._id});
-        const incomeCategories = await this.db.IncomeCategoryModel.find({user: user._id});
-        const expenseCategories = await this.db.ExpenseCategoryModel.find({user: user._id});
+        const categories = await this.db.CategoryModel.find({ user: user._id });
+        const transactions = await this.db.TransactionModel.find({ user: user._id });
+
         return {
             user,
-            incomes,
-            expenses,
-            incomeCategories,
-            expenseCategories
+            categories,
+            transactions
         }
     }
 }

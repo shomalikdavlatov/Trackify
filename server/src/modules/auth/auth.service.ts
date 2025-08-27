@@ -61,7 +61,7 @@ export class AuthService {
     }
 
     async login(user: any, res: any) {
-        const payload = { id: user._id, email: user.email };
+        const payload = { id: user._id };
         const token = this.jwtService.sign(payload);
 
         res.cookie('auth_token', token, {
