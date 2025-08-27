@@ -13,13 +13,13 @@ export class CategoryService {
     constructor(private db: MongoDBService) {}
 
     async create(body: CreateCategoryDto, id: string) {
-        const user = await this.db.UserModel.findById(id);
+        const user = await this.db.UserModel.findById(id).lean();
         if (!user) throw new NotFoundException('No account with that id');
 
         const category = await this.db.CategoryModel.find({
             ...body,
             user: id,
-        });
+        }).lean();
         if (category)
             throw new ConflictException(
                 'There is already a category with specified name',
@@ -32,7 +32,7 @@ export class CategoryService {
     }
 
     async findOne(id: string) {
-        const category = await this.db.CategoryModel.findById(id);
+        const category = await this.db.CategoryModel.findById(id).lean();
         if (!category) throw new NotFoundException('No category with that id');
 
         return category;
@@ -42,9 +42,9 @@ export class CategoryService {
       const category = await this.db.CategoryModel.findById(id);
       if (!category) throw new NotFoundException("No category with that id");
 
-      if (category.user !== userId) throw new ForbiddenException();
+      if (category.user.toString() !== userId) throw new ForbiddenException();
       
-      const check = await this.db.CategoryModel.find({...category, ...body});
+      const check = await this.db.CategoryModel.findOne({...category, ...body});
       if (check) throw new ConflictException(
         'There is already a category with specified name',
       );
@@ -56,7 +56,7 @@ export class CategoryService {
       const category = await this.db.CategoryModel.findById(id);
       if (!category) throw new NotFoundException("No category with that id");
   
-      if (category.user !== userId) throw new ForbiddenException();
+      if (category.user.toString() !== userId) throw new ForbiddenException();
 
       await this.db.CategoryModel.deleteOne({_id: id});
       return "Category deleted successfully!";
