@@ -1,7 +1,5 @@
-import axios from "axios";
-import { API_BASE } from "./api";
-
+import { api } from "./api";
 
 export const getUserData = async () => {
-    return await axios.get(`${API_BASE}/me`, { withCredentials: true });
+    return await api.get(`/me`);
 };

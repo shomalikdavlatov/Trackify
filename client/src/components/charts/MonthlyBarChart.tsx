@@ -14,7 +14,6 @@ interface Props {
     data: Transaction[];
 }
 export default function MonthlyBarChart({ data }: Props) {
-    // group by month; income positive, expense negative
     const grouped = data.reduce<Record<string, { month: string; income: number; expense: number }>>((acc, t) => {
         const m = monthKey(t.datetime);
         acc[m] ||= { month: m, income: 0, expense: 0 };

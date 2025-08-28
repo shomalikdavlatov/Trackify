@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, type JSX } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { me } from "../api/auth";
-import { getUserData } from "../api/user";
 
 const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -13,8 +12,6 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
         const checkAuth = async () => {
             try {
                 const res = await me();
-                const data = await getUserData();
-                console.log(data.data);
 
                 if (res.status === 200) {
                     setIsAuthenticated(true);
@@ -30,7 +27,6 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
                     }
                 }
             } catch (err) {
-                console.log(err);
                 setIsAuthenticated(false);
                 if (!shownToastRef.current) {
                     shownToastRef.current = true;

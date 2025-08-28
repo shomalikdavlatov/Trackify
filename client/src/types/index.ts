@@ -4,15 +4,15 @@ export type TxType = "income" | "expense";
 export interface Category {
 id: string;
 name: string;
-type: TxType; // income | expense (separate buckets)
+type: TxType; 
 }
 
 
 export interface Transaction {
 id: string;
 type: TxType;
-categoryId: string;
+category: string;
 amount: number;
 note?: string;
-datetime: string; // ISO string; you’ll parse by month
+datetime: string;
 }

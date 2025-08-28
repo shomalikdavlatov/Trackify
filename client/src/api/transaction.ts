@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_BASE } from "./api";
+import { api } from "./api";
 
 export const createTransaction = async (
     type: "income" | "expense",
@@ -8,11 +7,15 @@ export const createTransaction = async (
     note?: string,
     datetime?: string
 ) => {
-    return await axios.post(`${API_BASE}/transaction`, { type, categoryId, amount, note, datetime });
+    return await api.post(`/transaction`, { type, categoryId, amount, note, datetime });
+};
+
+export const getTransactionAll = async () => {
+    return await api.get(`/transaction`);
 };
 
 export const getTransactionById = async (id: string) => {
-    return await axios.get(`${API_BASE}/transaction/${id}`);
+    return await api.get(`/transaction/${id}`);
 };
 
 export const updateTransaction = async (
@@ -23,9 +26,9 @@ export const updateTransaction = async (
     note?: string,
     datetime?: string
 ) => {
-    return await axios.put(`${API_BASE}/transaction/${id}`, { name, type, categoryId, amount, note, datetime });
+    return await api.put(`/transaction/${id}`, { name, type, categoryId, amount, note, datetime });
 };
 
 export const deleteTransaction = async (id: string) => {
-    return await axios.delete(`${API_BASE}/transaction/${id}`);
+    return await api.delete(`/transaction/${id}`);
 };

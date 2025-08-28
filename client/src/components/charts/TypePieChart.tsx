@@ -13,8 +13,8 @@ interface Props {
 }
 
 const COLOR_BY_NAME: Record<"Income" | "Expense", string> = {
-    Income: "#16a34a", // green-600
-    Expense: "#dc2626", // red-600
+    Income: "#16a34a",
+    Expense: "#dc2626",
 };
 
 export default function TypePieChart({ data }: Props) {
