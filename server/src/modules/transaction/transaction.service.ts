@@ -40,6 +40,11 @@ export class TransactionService {
         return tx;
     }
 
+    async findAll(id: string) {
+        const txs = await this.db.TransactionModel.find({user: id});
+        return txs;
+    }
+
     async findOne(id: string, userId: string) {
         const tx = await this.db.TransactionModel.findById(id);
         if (!tx) throw new NotFoundException('No transaction with that id');

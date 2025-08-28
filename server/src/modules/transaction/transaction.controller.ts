@@ -7,13 +7,16 @@ import {
     Delete,
     Req,
     Put,
+    UseGuards,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('transaction')
 export class TransactionController {
     constructor(
@@ -25,6 +28,12 @@ export class TransactionController {
     create(@Body() body: CreateTransactionDto, @Req() req: Request) {
         const { id } = this.jwtService.decode(req.cookies.auth_token);
         return this.transactionService.create(body, id);
+    }
+
+    @Get()
+    findAll(@Req() req: Request) {
+        const { id } = this.jwtService.decode(req.cookies.auth_token);
+        return this.transactionService.findAll(id);
     }
 
     @Get(':id')

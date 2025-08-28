@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Req } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Param,
+    Delete,
+    Put,
+    Req,
+    UseGuards,
+} from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('category')
 export class CategoryController {
     constructor(
@@ -16,6 +28,12 @@ export class CategoryController {
     create(@Body() body: CreateCategoryDto, @Req() req: Request) {
         const { id } = this.jwtService.decode(req.cookies.auth_token);
         return this.categoryService.create(body, id);
+    }
+
+    @Get()
+    findAll(@Req() req: Request) {
+        const { id } = this.jwtService.decode(req.cookies.auth_token);
+        return this.categoryService.findAll(id);
     }
 
     @Get(':id')
@@ -31,11 +49,11 @@ export class CategoryController {
     ) {
         const { id: userId } = this.jwtService.decode(req.cookies.auth_token);
         return this.categoryService.update(id, body, userId);
-      }
-      
-      @Delete(':id')
-      remove(@Param('id') id: string, @Req() req: Request) {
-      const { id: userId } = this.jwtService.decode(req.cookies.auth_token);
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string, @Req() req: Request) {
+        const { id: userId } = this.jwtService.decode(req.cookies.auth_token);
         return this.categoryService.remove(id, userId);
     }
 }

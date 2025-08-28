@@ -16,7 +16,7 @@ export class CategoryService {
         const user = await this.db.UserModel.findById(id).lean();
         if (!user) throw new NotFoundException('No account with that id');
 
-        const category = await this.db.CategoryModel.find({
+        const category = await this.db.CategoryModel.findOne({
             ...body,
             user: id,
         }).lean();
@@ -29,6 +29,11 @@ export class CategoryService {
             ...body,
             user: id,
         });
+    }
+
+    async findAll(id: string) {
+        const category = await this.db.CategoryModel.find({user: id}).lean();
+        return category;
     }
 
     async findOne(id: string) {
