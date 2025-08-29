@@ -1,0 +1,201 @@
+// components/forms/EditTransactionForm.tsx
+import { useEffect, useMemo, useState } from "react";
+import Button from "../ui/Button";
+import { type Category, type TxType } from "../../types";
+import { toast } from "react-toastify";
+import { getCategoryAll } from "../../api/category";
+
+interface EditProps {
+    initial: {
+        type: TxType;
+        categoryId: string;
+        amount: number;
+        note?: string;
+        datetime: string; // ISO
+    };
+    onSubmit: (payload: {
+        type: TxType;
+        categoryId: string;
+        amount: number; // integer
+        note?: string;
+        datetime: string; // ISO
+    }) => void;
+}
+
+function toArray<T>(resData: any): T[] {
+    if (Array.isArray(resData)) return resData as T[];
+    if (Array.isArray(resData?.data)) return resData.data as T[];
+    if (Array.isArray(resData?.items)) return resData.items as T[];
+    return [];
+}
+
+function normalizeCategories(raw: any[]): Category[] {
+    return raw.map((c: any) => ({
+        id: c.id ?? c._id ?? String(c.id ?? c._id),
+        name: c.name,
+        type: c.type,
+    }));
+}
+
+function isoToLocalDatetimeInput(iso: string) {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+        d.getDate()
+    )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export default function EditTransactionForm({ initial, onSubmit }: EditProps) {
+    const [type, setType] = useState<TxType>(initial.type);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const [categoryId, setCategoryId] = useState(initial.categoryId);
+    const [amount, setAmount] = useState<number>(initial.amount);
+    const [note, setNote] = useState(initial.note ?? "");
+    const [datetime, setDatetime] = useState<string>(() =>
+        isoToLocalDatetimeInput(initial.datetime)
+    );
+
+    // Load categories
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setLoading(true);
+                const res = await getCategoryAll();
+                const arr = toArray<any>(res.data);
+                const normalized = normalizeCategories(arr);
+                if (mounted) setCategories(normalized);
+            } catch {
+                toast.error("Failed to load categories");
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const [bootstrapped, setBootstrapped] = useState(false);
+    useEffect(() => {
+        if (bootstrapped || loading) return;
+        const found = categories.find((c) => c.id === initial.categoryId);
+        if (found) {
+            setCategoryId(found.id);
+            if (found.type !== type) setType(found.type as TxType);
+        } else {
+            // Optional fallback: pick the first category of current type
+            const first = categories.find((c) => c.type === type);
+            setCategoryId(first?.id ?? "");
+        }
+        setBootstrapped(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, categories, bootstrapped]);
+
+    // Filter by selected type
+    const filtered = useMemo(
+        () => categories.filter((c) => c.type === type),
+        [categories, type]
+    );
+
+    // When type changes, only then (and only after loading) clear invalid selection
+    useEffect(() => {
+        if (loading) return;
+        if (categoryId && !filtered.some((c) => c.id === categoryId)) {
+            setCategoryId("");
+        }
+    }, [type, filtered, categoryId, loading]);
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (!categoryId || amount <= 0) {
+            toast.error("Please select category and set amount > 0");
+            return;
+        }
+        const iso = new Date(datetime).toISOString();
+
+        onSubmit({
+            type,
+            categoryId,
+            amount: Math.trunc(amount),
+            note: note || undefined,
+            datetime: iso,
+        });
+    };
+
+    return (
+        <form className="space-y-3" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-3">
+                <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as TxType)}
+                    className="border rounded-xl px-3 py-2"
+                    disabled={loading}
+                >
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+
+                <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="border rounded-xl px-3 py-2"
+                    disabled={loading || filtered.length === 0}
+                >
+                    <option value="">
+                        {loading ? "Loading..." : "Select category"}
+                    </option>
+                    {filtered.map((c) => (
+                        <option key={c.id} value={c.id}>
+                            {c.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={Number.isFinite(amount) ? amount : 0}
+                    onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        setAmount(Number.isNaN(v) ? 0 : v);
+                    }}
+                    placeholder="Amount"
+                    className="border rounded-xl px-3 py-2"
+                />
+
+                <input
+                    type="datetime-local"
+                    value={datetime}
+                    onChange={(e) => setDatetime(e.target.value)}
+                    className="border rounded-xl px-3 py-2"
+                />
+            </div>
+
+            <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Note (optional)"
+                className="border rounded-xl px-3 py-2 w-full"
+            />
+
+            <div className="flex justify-end">
+                <Button type="submit" disabled={loading}>
+                    Save changes
+                </Button>
+            </div>
+
+            {!loading && categories.length > 0 && filtered.length === 0 && (
+                <div className="text-xs text-slate-500">
+                    No categories under “{type}”. Create one first.
+                </div>
+            )}
+        </form>
+    );
+}

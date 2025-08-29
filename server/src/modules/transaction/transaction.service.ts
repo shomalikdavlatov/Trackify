@@ -13,7 +13,7 @@ export class TransactionService {
     constructor(private db: MongoDBService) {}
 
     async create(body: CreateTransactionDto, userId: string) {
-        const user = await this.db.UserModel.findById(userId).lean();
+        const user = await this.db.UserModel.findById(userId);
         if (!user) throw new NotFoundException('No account with that id');
 
         const category = await this.db.CategoryModel.findById(body.categoryId);
@@ -25,6 +25,9 @@ export class TransactionService {
                 'Category type must match transaction type',
             );
         }
+
+        user.balance += body.type === 'income' ? body.amount : body.amount * -1;
+        user.save();
 
         const datetime = body.datetime ? new Date(body.datetime) : undefined;
 
@@ -74,6 +77,13 @@ export class TransactionService {
             }
         }
 
+        if (body.amount) {
+            const user = await this.db.UserModel.findById(userId);
+            user.balance += tx.type === 'income' ? tx.amount * -1 : tx.amount;
+            user.balance += (body.type ?? tx.type) === 'income' ? body.amount : body.amount * -1;
+            user.save();
+        }
+
         const update: any = {};
         if (body.note !== undefined)
             update.note = body.note?.trim() || undefined;
@@ -91,6 +101,10 @@ export class TransactionService {
         const tx = await this.db.TransactionModel.findById(id);
         if (!tx) throw new NotFoundException('No transaction with that id');
         if (tx.user.toString() !== userId) throw new ForbiddenException();
+
+        const user = await this.db.UserModel.findById(userId);
+        user.balance += tx.type === 'income' ? tx.amount * -1 : tx.amount;
+        user.save();
 
         await this.db.TransactionModel.deleteOne({ _id: id });
         return 'Transaction deleted successfully!';
