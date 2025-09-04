@@ -7,10 +7,11 @@ import {
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
+import { TransactionService } from '../transaction/transaction.service';
 
 @Injectable()
 export class CategoryService {
-    constructor(private db: MongoDBService) {}
+    constructor(private db: MongoDBService, private transactionService: TransactionService) {}
 
     async create(body: CreateCategoryDto, id: string) {
         const user = await this.db.UserModel.findById(id).lean();
@@ -32,7 +33,7 @@ export class CategoryService {
     }
 
     async findAll(id: string) {
-        const category = await this.db.CategoryModel.find({user: id}).lean();
+        const category = await this.db.CategoryModel.find({ user: id }).lean();
         return category;
     }
 
@@ -44,26 +45,32 @@ export class CategoryService {
     }
 
     async update(id: string, body: UpdateCategoryDto, userId: string) {
-      const category = await this.db.CategoryModel.findById(id);
-      if (!category) throw new NotFoundException("No category with that id");
+        const category = await this.db.CategoryModel.findById(id);
+        if (!category) throw new NotFoundException('No category with that id');
 
-      if (category.user.toString() !== userId) throw new ForbiddenException();
-      
-      const check = await this.db.CategoryModel.findOne({...category, ...body});
-      if (check) throw new ConflictException(
-        'There is already a category with specified name',
-      );
-      
-      return await this.db.CategoryModel.updateOne({_id: id}, body);
+        if (category.user.toString() !== userId) throw new ForbiddenException();
+
+        const check = await this.db.CategoryModel.findOne({ name: body.name });
+
+        if (check && check._id.toString() !== id)
+            throw new ConflictException(
+                'There is already a category with specified name',
+            );
+
+        return await this.db.CategoryModel.updateOne({ _id: id }, body);
     }
-    
-    async remove(id: string, userId: string) {
-      const category = await this.db.CategoryModel.findById(id);
-      if (!category) throw new NotFoundException("No category with that id");
-  
-      if (category.user.toString() !== userId) throw new ForbiddenException();
 
-      await this.db.CategoryModel.deleteOne({_id: id});
-      return "Category deleted successfully!";
+    async remove(id: string, userId: string) {
+        const category = await this.db.CategoryModel.findById(id);
+        if (!category) throw new NotFoundException('No category with that id');
+
+        if (category.user.toString() !== userId) throw new ForbiddenException();
+
+        const transactions = await this.db.TransactionModel.find({category: id});
+
+        transactions.forEach((tx) => this.transactionService.remove(tx._id, userId));
+
+        await this.db.CategoryModel.deleteOne({ _id: id });
+        return 'Category deleted successfully!';
     }
 }

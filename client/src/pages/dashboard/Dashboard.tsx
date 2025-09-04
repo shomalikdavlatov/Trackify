@@ -1,16 +1,18 @@
+// dashboard/dashboard.tsx
 import { useEffect, useState } from "react";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import StatsCards from "../../components/dashboard/StatsCards";
 import MonthlyBarChart from "../../components/charts/MonthlyBarChart";
 import TypePieChart from "../../components/charts/TypePieChart";
+import DailyLineChart from "../../components/charts/DailyLineChart";
 import Modal from "../../components/ui/Modal";
 import AddTransactionForm from "../../components/forms/AddTransactionForm";
 import useModal from "../../hooks/useModal";
-import { type Transaction, type Category } from "../../types";
+import { type Transaction } from "../../types";
 import { toast } from "react-toastify";
 import { createTransaction, getTransactionAll } from "../../api/transaction";
-import { getCategoryAll } from "../../api/category";
+import TopThisMonth from "../../components/dashboard/TopThisMonth";
 
 function toArray<T>(resData: any): T[] {
     if (Array.isArray(resData)) return resData as T[];
@@ -37,24 +39,14 @@ function normalizeTransactions(raw: any[]): Transaction[] {
     }));
 }
 
-function normalizeCategories(raw: any[]): Category[] {
-    return raw.map((c: any) => ({
-        id: c.id ?? c._id ?? String(c.id ?? c._id),
-        name: c.name,
-        type: c.type,
-    }));
-}
-
 export default function Dashboard() {
     const txModal = useModal(false);
-
     const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
         (async () => {
             try {
-                const txRes = await getTransactionAll()
-
+                const txRes = await getTransactionAll();
                 setTransactions(normalizeTransactions(toArray(txRes.data)));
             } catch {
                 toast.error("Failed to load dashboard data");
@@ -79,7 +71,6 @@ export default function Dashboard() {
             );
             const createdRaw = (res.data?.data ?? res.data) as any;
             const [created] = normalizeTransactions([createdRaw]);
-
             setTransactions((prev) => [...prev, created]);
             toast.success("Transaction created");
             txModal.onClose();
@@ -98,14 +89,23 @@ export default function Dashboard() {
             <StatsCards data={transactions} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="col-span-2 p-5">
-                    <div className="font-medium mb-3">Monthly Overview</div>
-                    <MonthlyBarChart data={transactions} />
+                <Card className="col-span-1 lg:col-span-2 p-5">
+                    <DailyLineChart data={transactions} />
                 </Card>
+
                 <Card className="p-5">
                     <div className="font-medium mb-3">Income vs Expense</div>
                     <TypePieChart data={transactions} />
                 </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="col-span-2 p-5">
+                    <div className="font-medium mb-3">Monthly Overview</div>
+                    <MonthlyBarChart data={transactions} />
+                </Card>
+
+                <TopThisMonth data={transactions} />
             </div>
 
             <Modal

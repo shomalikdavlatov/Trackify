@@ -9,7 +9,7 @@ export default function Button({
     ...rest
 }: Props) {
     const base =
-        "px-4 py-2 rounded-xl text-sm font-medium transition disabled:opacity-50";
+        "px-4 py-2 rounded-md text-sm font-medium transition disabled:opacity-50";
     const variants = {
         primary: "bg-brand-600 text-white hover:bg-brand-700",
         ghost: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",

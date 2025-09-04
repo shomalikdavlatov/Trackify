@@ -186,7 +186,7 @@ export default function EditTransactionForm({ initial, onSubmit }: EditProps) {
             />
 
             <div className="flex justify-end">
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} className="!w-full">
                     Save changes
                 </Button>
             </div>

@@ -32,10 +32,7 @@ export default function TransactionTable({
                             <th className="text-left px-4 py-2">Category</th>
                             <th className="text-right px-4 py-2">Amount</th>
                             <th className="text-left px-4 py-2">Note</th>
-                            <th className="text-right px-4 py-2">
-                                Actions
-                            </th>{" "}
-                            {/* NEW */}
+                            <th className="text-right px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,7 +58,10 @@ export default function TransactionTable({
                                         {r.type}
                                     </td>
                                     <td className="px-4 py-2">
-                                        {catById[r.category]?.name ?? "—"}
+                                        {catById[
+                                            (r as any).category ??
+                                                (r as any).categoryId
+                                        ]?.name ?? "—"}
                                     </td>
                                     <td className="px-4 py-2 text-right">
                                         {money(r.amount)}
@@ -71,46 +71,21 @@ export default function TransactionTable({
                                     </td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-end gap-2">
-                                            {/* Edit */}
                                             <button
                                                 type="button"
                                                 onClick={() => onEdit(r)}
-                                                className="inline-flex items-center rounded-lg border border-slate-200 px-2 py-1 hover:bg-slate-50"
+                                                className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50"
                                                 title="Edit"
                                             >
-                                                {/* simple pencil svg */}
-                                                <svg
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                >
-                                                    <path
-                                                        d="M4 21l4.5-1 11-11-3.5-3.5-11 11L4 21z"
-                                                        stroke="currentColor"
-                                                    />
-                                                </svg>
+                                                Edit
                                             </button>
-
-                                            {/* Delete */}
                                             <button
                                                 type="button"
                                                 onClick={() => onDelete(r.id)}
-                                                className="inline-flex items-center rounded-lg border border-rose-200 px-2 py-1 text-rose-600 hover:bg-rose-50"
+                                                className="inline-flex items-center rounded-lg border border-rose-200 px-3 py-1.5 text-rose-600 hover:bg-rose-50"
                                                 title="Delete"
                                             >
-                                                {/* trash svg */}
-                                                <svg
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                >
-                                                    <path
-                                                        d="M3 6h18M8 6V4h8v2m-1 0v14H9V6h6z"
-                                                        stroke="currentColor"
-                                                    />
-                                                </svg>
+                                                Delete
                                             </button>
                                         </div>
                                     </td>

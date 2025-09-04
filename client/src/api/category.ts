@@ -12,8 +12,8 @@ export const getCategoryById = async (id: string,) => {
     return await api.get(`/category/${id}`);
 }
 
-export const updateCategory = async (id: string, name?: string, type?: "income" | "expense") => {
-    return await api.put(`/category/${id}`, {name, type});
+export const updateCategory = async (id: string, name: string) => {
+    return await api.put(`/category/${id}`, {name});
 }
 
 export const deleteCategory = async (id: string) => {

@@ -1,28 +1,196 @@
+// components/dashboard/StatsCards.tsx
 import Card from "../ui/Card";
 import { money } from "../../utils/functions";
 import { type Transaction } from "../../types";
 
+function startOfMonth(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+}
+function daysInMonth(year: number, monthZeroBased: number) {
+    return new Date(year, monthZeroBased + 1, 0).getDate();
+}
+function rangeForMonthOffset(offset: number) {
+    const now = new Date();
+    const start = startOfMonth(
+        new Date(now.getFullYear(), now.getMonth() + offset, 1)
+    );
+    const end = startOfMonth(
+        new Date(now.getFullYear(), now.getMonth() + offset + 1, 1)
+    );
+    const numDays = daysInMonth(start.getFullYear(), start.getMonth());
+    return { start, end, numDays };
+}
+function sumByTypeInRange(
+    data: Transaction[],
+    type: "income" | "expense",
+    start: Date,
+    end: Date
+) {
+    const s = start.getTime();
+    const e = end.getTime();
+    return (Array.isArray(data) ? data : [])
+        .filter((t) => t?.type === type && t?.datetime)
+        .filter((t) => {
+            const ts = new Date(t.datetime).getTime();
+            return ts >= s && ts < e;
+        })
+        .reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+}
+
+function highestLastNDays(data: Transaction[], days: number) {
+    const now = Date.now();
+    const start = now - days * 24 * 60 * 60 * 1000;
+    const list = (Array.isArray(data) ? data : []).filter(
+        (t) => t?.datetime && new Date(t.datetime).getTime() >= start
+    );
+    if (list.length === 0) return null;
+    return list.reduce((max, cur) =>
+        (Number(cur.amount) || 0) > (Number(max.amount) || 0) ? cur : max
+    );
+}
+
+function pctDeltaByDailyAvg(
+    currTotal: number,
+    currDays: number,
+    prevTotal: number,
+    prevDays: number
+) {
+    const currAvg = currDays > 0 ? currTotal / currDays : 0;
+    const prevAvg = prevDays > 0 ? prevTotal / prevDays : 0;
+    if (prevAvg === 0) return { pct: null, dir: 0 }; // no baseline
+    const pct = ((currAvg - prevAvg) / prevAvg) * 100;
+    const dir = pct > 0 ? 1 : pct < 0 ? -1 : 0;
+    return { pct, dir };
+}
+function deltaText(pct: number | null, dir: number, goodWhenUp: boolean) {
+    if (pct === null)
+        return { text: "— vs prev mo (daily avg)", cls: "text-slate-400" };
+    const arrow = dir > 0 ? "↑" : dir < 0 ? "↓" : "→";
+    const pctStr = `${Math.abs(pct).toFixed(0)}%`;
+    const favorable = dir === 0 ? null : dir > 0 ? goodWhenUp : !goodWhenUp;
+    const cls =
+        favorable === null
+            ? "text-slate-500"
+            : favorable
+            ? "text-green-600"
+            : "text-rose-600";
+    return { text: `${arrow} ${pctStr} vs prev mo (daily avg)`, cls };
+}
+
+type Item = {
+    label: string;
+    value: string;
+    sub?: string;
+    valueClass?: string;
+    subClass?: string;
+};
+
 export default function StatsCards({ data }: { data: Transaction[] }) {
-    const income = data
-        .filter((d) => d.type === "income")
-        .reduce((s, d) => s + d.amount, 0);
-    const expense = data
-        .filter((d) => d.type === "expense")
-        .reduce((s, d) => s + d.amount, 0);
-    const balance = income - expense;
-    const items = [
-        { label: "Income", value: money(income) },
-        { label: "Expense", value: money(expense) },
-        { label: "Balance", value: money(balance) },
+    const last = rangeForMonthOffset(-1);
+    const prev = rangeForMonthOffset(-2);
+
+    const incomeLast = sumByTypeInRange(data, "income", last.start, last.end);
+    const incomePrev = sumByTypeInRange(data, "income", prev.start, prev.end);
+
+    const expenseLast = sumByTypeInRange(data, "expense", last.start, last.end);
+    const expensePrev = sumByTypeInRange(data, "expense", prev.start, prev.end);
+
+    const balanceLast = incomeLast - expenseLast;
+    const balancePrev = incomePrev - expensePrev;
+
+    const incDelta = pctDeltaByDailyAvg(
+        incomeLast,
+        last.numDays,
+        incomePrev,
+        prev.numDays
+    );
+    const expDelta = pctDeltaByDailyAvg(
+        expenseLast,
+        last.numDays,
+        expensePrev,
+        prev.numDays
+    );
+    const balDelta = pctDeltaByDailyAvg(
+        balanceLast,
+        last.numDays,
+        balancePrev,
+        prev.numDays
+    );
+
+    const incDeltaTxt = deltaText(incDelta.pct, incDelta.dir, true); // up income = good
+    const expDeltaTxt = deltaText(expDelta.pct, expDelta.dir, false); // up expense = bad
+    const balDeltaTxt = deltaText(balDelta.pct, balDelta.dir, true); // up balance = good
+
+    const top14 = highestLastNDays(data, 14);
+    const topValue = top14 ? money(Number(top14.amount) || 0) : "—";
+    const topSub = top14
+        ? `${
+              top14.note?.trim() ||
+              (top14.type === "income" ? "Income" : "Expense")
+          } • ${new Date(top14.datetime).toLocaleDateString()}`
+        : "No tx in last 14 days";
+    const topClass = top14
+        ? top14.type === "income"
+            ? "text-green-600"
+            : "text-rose-600"
+        : "text-slate-400";
+
+    const balanceClass =
+        balanceLast > 0
+            ? "text-green-600"
+            : balanceLast < 0
+            ? "text-rose-600"
+            : "";
+
+    const items: Item[] = [
+        {
+            label: "Income (last month)",
+            value: money(incomeLast),
+            sub: incDeltaTxt.text,
+            subClass: incDeltaTxt.cls,
+        },
+        {
+            label: "Expense (last month)",
+            value: money(expenseLast),
+            sub: expDeltaTxt.text,
+            subClass: expDeltaTxt.cls,
+        },
+        {
+            label: "Balance (last month)",
+            value: money(balanceLast),
+            valueClass: balanceClass,
+            sub: balDeltaTxt.text,
+            subClass: balDeltaTxt.cls,
+        },
+        {
+            label: "Top Transaction (last 14 days)",
+            value: topValue,
+            sub: topSub,
+            valueClass: topClass,
+        },
     ];
+
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {items.map((it) => (
                 <Card key={it.label} className="p-5">
                     <div className="text-sm text-slate-500">{it.label}</div>
-                    <div className="text-2xl font-semibold mt-1">
+                    <div
+                        className={`text-2xl font-semibold mt-1 ${
+                            it.valueClass ?? ""
+                        }`}
+                    >
                         {it.value}
                     </div>
+                    {it.sub ? (
+                        <div
+                            className={`text-xs mt-1 ${
+                                it.subClass ?? "text-slate-500"
+                            }`}
+                        >
+                            {it.sub}
+                        </div>
+                    ) : null}
                 </Card>
             ))}
         </div>
