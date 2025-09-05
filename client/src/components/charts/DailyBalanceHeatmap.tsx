@@ -95,7 +95,7 @@ export default function DailyBalanceHeatmap({
                     className="border rounded-lg px-2 py-1 text-sm"
                 >
                     {Array.from(
-                        { length: 5 },
+                        { length: 10 },
                         (_, i) => new Date().getFullYear() - i
                     ).map((yearOption) => (
                         <option key={yearOption} value={yearOption}>

@@ -1,9 +1,9 @@
 // dashboard/transactions.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import AddTransactionForm from "../../components/forms/AddTransactionForm";
-import EditTransactionForm from "../../components/forms/EditTransactionForm"; // ⬅️ new
+import EditTransactionForm from "../../components/forms/EditTransactionForm";
 import TransactionTable from "../../components/tables/TransactionTable";
 import useModal from "../../hooks/useModal";
 import { type Category, type Transaction } from "../../types";
@@ -27,7 +27,6 @@ function normalizeTransactions(raw: any[]): Transaction[] {
     return raw.map((t: any) => ({
         id: t.id ?? t._id ?? String(t.id ?? t._id),
         type: t.type,
-        // Always keep a clean categoryId string, no mixed object:
         category: t.category,
         amount: Number(t.amount) || 0,
         note: t.note ?? undefined,
@@ -53,6 +52,19 @@ export default function Transactions() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [editing, setEditing] = useState<Transaction | null>(null);
 
+    // ---------------- FILTER STATE ----------------
+    const [filterStartDate, setFilterStartDate] = useState<string>("");
+    const [filterEndDate, setFilterEndDate] = useState<string>("");
+    const [filterCategory, setFilterCategory] = useState<string | null>(null);
+    const [filterNote, setFilterNote] = useState<string>("");
+    const [filterType, setFilterType] = useState<"all" | "income" | "expense">(
+        "all"
+    );
+
+    // ---------------- SORT STATE ----------------
+    const [sortBy, setSortBy] = useState<"date" | "amount">("date");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
     useEffect(() => {
         (async () => {
             try {
@@ -60,14 +72,78 @@ export default function Transactions() {
                     getTransactionAll(),
                     getCategoryAll(),
                 ]);
+                const normalizedCats = normalizeCategories(
+                    toArray(catRes.data)
+                );
+                setCategories(normalizedCats);
                 setTransactions(normalizeTransactions(toArray(txRes.data)));
-                setCategories(normalizeCategories(toArray(catRes.data)));
             } catch {
                 toast.error("Failed to load data");
             }
         })();
     }, []);
 
+    // -------------- FILTERED & SORTED TRANSACTIONS --------------
+    const filteredTransactions = useMemo(() => {
+        let filtered = transactions.filter((t) => {
+            // Filter by start date
+            if (
+                filterStartDate &&
+                new Date(t.datetime) < new Date(filterStartDate)
+            )
+                return false;
+
+            // Filter by end date
+            if (filterEndDate && new Date(t.datetime) > new Date(filterEndDate))
+                return false;
+
+            // Filter by categories
+            if (
+                filterCategory &&
+                filterCategory !== String(t.category)
+            )
+                return false;
+
+            // Filter by note
+            if (
+                filterNote &&
+                !(t.note ?? "").toLowerCase().includes(filterNote.toLowerCase())
+            )
+                return false;
+
+            // Filter by type
+            if (filterType !== "all" && t.type !== filterType) return false;
+
+            return true;
+        });
+
+        // Sorting
+        filtered.sort((a, b) => {
+            let comp = 0;
+            if (sortBy === "date") {
+                comp =
+                    new Date(a.datetime).getTime() -
+                    new Date(b.datetime).getTime();
+            } else if (sortBy === "amount") {
+                comp = a.amount - b.amount;
+            }
+
+            return sortOrder === "asc" ? comp : -comp;
+        });
+
+        return filtered;
+    }, [
+        transactions,
+        filterStartDate,
+        filterEndDate,
+        filterCategory,
+        filterNote,
+        filterType,
+        sortBy,
+        sortOrder,
+    ]);
+
+    // ---------- HANDLERS ----------
     const handleCreateTx = async (payload: {
         type: "income" | "expense";
         categoryId: string;
@@ -146,8 +222,134 @@ export default function Transactions() {
                 <Button onClick={addModal.onOpen}>+ Add Transaction</Button>
             </div>
 
+            {/* --------------- FILTER & SORT UI ---------------- */}
+            <div className="flex flex-nowrap gap-1 items-end">
+                {/* Start Date */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Start Date</label>
+                    <input
+                        type="date"
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        className="border px-[6px] py-2 h-10 rounded"
+                    />
+                </div>
+
+                {/* End Date */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">End Date</label>
+                    <input
+                        type="date"
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        className="border px-[6px] py-2 h-10 rounded"
+                    />
+                </div>
+
+                {/* Category */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Category</label>
+                    <select
+                        value={filterCategory || "all"}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "all") setFilterCategory(null);
+                            else setFilterCategory(value);
+                        }}
+                        className="border px-[6px] py-2 h-10 rounded max-w-[148px] min-w-[120px]"
+                    >
+                        <option value="all">All</option>
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Type */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Type</label>
+                    <select
+                        value={filterType}
+                        onChange={(e) =>
+                            setFilterType(
+                                e.target.value as "all" | "income" | "expense"
+                            )
+                        }
+                        className="border px-[6px] py-2 h-10 rounded"
+                    >
+                        <option value="all">All</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+
+                {/* Note */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Note</label>
+                    <input
+                        type="text"
+                        placeholder="Search note..."
+                        value={filterNote}
+                        onChange={(e) => setFilterNote(e.target.value)}
+                        className="border px-[6px] py-2 h-10 rounded w-[140px]"
+                    />
+                </div>
+
+                {/* Sort By */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Sort By</label>
+                    <select
+                        value={sortBy}
+                        onChange={(e) =>
+                            setSortBy(e.target.value as "date" | "amount")
+                        }
+                        className="border px-[6px] py-2 h-10 rounded"
+                    >
+                        <option value="date">Date</option>
+                        <option value="amount">Amount</option>
+                    </select>
+                </div>
+
+                {/* Sort Order */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium">Order</label>
+                    <select
+                        value={sortOrder}
+                        onChange={(e) =>
+                            setSortOrder(e.target.value as "asc" | "desc")
+                        }
+                        className="border px-[6px] py-2 h-10 rounded"
+                    >
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex flex-col justify-end flex-1">
+                    <Button
+                        variant="danger"
+                        onClick={() => {
+                            setFilterStartDate("");
+                            setFilterEndDate("");
+                            setFilterCategory(null);
+                            setFilterNote("");
+                            setFilterType("all");
+                            setSortBy("date");
+                            setSortOrder("desc");
+                        }}
+                        className="h-10"
+                    >
+                        Clear Filters
+                    </Button>
+                </div>
+            </div>
+
+            {/* --------------- TRANSACTION TABLE ---------------- */}
             <TransactionTable
-                rows={transactions}
+                rows={filteredTransactions}
                 categories={categories}
                 onEdit={openEdit}
                 onDelete={handleDeleteTx}
@@ -191,7 +393,6 @@ export default function Transactions() {
                     <EditTransactionForm
                         initial={{
                             type: editing.type,
-                            // ensure string id even if something odd:
                             categoryId: String(editing.category ?? ""),
                             amount: editing.amount,
                             note: editing.note ?? "",

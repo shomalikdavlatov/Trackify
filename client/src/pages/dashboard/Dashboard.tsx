@@ -44,6 +44,9 @@ export default function Dashboard() {
     const txModal = useModal(false);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [year, setYear] = useState<number>(new Date().getFullYear());
+    const [categoryFilter, setCategoryFilter] = useState<
+        "all" | "income" | "expense"
+    >("all");
 
     useEffect(() => {
         (async () => {
@@ -85,6 +88,12 @@ export default function Dashboard() {
         setYear(Number(e.target.value));
     };
 
+    const handleCategoryFilterChange = (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        setCategoryFilter(e.target.value as "all" | "income" | "expense");
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -107,14 +116,32 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="col-span-2 p-5">
-                    <div className="font-medium mb-3">Monthly Overview</div>
-                    <MonthlyBarChart data={transactions} />
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="font-medium">Monthly Overview</div>
+                        <select
+                            value={categoryFilter}
+                            onChange={handleCategoryFilterChange}
+                            className="border rounded-lg px-2 py-1 text-sm"
+                        >
+                            <option value="all">All</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <MonthlyBarChart
+                        data={transactions}
+                        categoryFilter={categoryFilter}
+                    />
                 </Card>
 
                 <TopThisMonth data={transactions} />
             </div>
 
-            <DailyBalanceHeatmap data={transactions} year={year} onYearChange={handleYearChange}/>
+            <DailyBalanceHeatmap
+                data={transactions}
+                year={year}
+                onYearChange={handleYearChange}
+            />
 
             <Modal
                 open={txModal.open}
