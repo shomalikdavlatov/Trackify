@@ -132,4 +132,9 @@ export class AuthService {
         await this.redis.del(`reset:${email}`);
         return { message: 'Password reset successfully' };
     }
+
+    async getUser(token: string) {
+        const {id} = await this.jwtService.decode(token);
+        return await this.db.UserModel.findOne({_id: id});
+    }
 }

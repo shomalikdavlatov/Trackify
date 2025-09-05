@@ -13,6 +13,7 @@ import { type Transaction } from "../../types";
 import { toast } from "react-toastify";
 import { createTransaction, getTransactionAll } from "../../api/transaction";
 import TopThisMonth from "../../components/dashboard/TopThisMonth";
+import DailyBalanceHeatmap from "../../components/charts/DailyBalanceHeatmap";
 
 function toArray<T>(resData: any): T[] {
     if (Array.isArray(resData)) return resData as T[];
@@ -42,6 +43,7 @@ function normalizeTransactions(raw: any[]): Transaction[] {
 export default function Dashboard() {
     const txModal = useModal(false);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [year, setYear] = useState<number>(new Date().getFullYear());
 
     useEffect(() => {
         (async () => {
@@ -79,6 +81,10 @@ export default function Dashboard() {
         }
     };
 
+    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setYear(Number(e.target.value));
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -107,6 +113,8 @@ export default function Dashboard() {
 
                 <TopThisMonth data={transactions} />
             </div>
+
+            <DailyBalanceHeatmap data={transactions} year={year} onYearChange={handleYearChange}/>
 
             <Modal
                 open={txModal.open}

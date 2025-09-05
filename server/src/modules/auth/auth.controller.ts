@@ -65,11 +65,12 @@ export class AuthController {
 
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
-    me(@Req() req: Request) {
+    async me(@Req() req: Request) {
         const token = (req as any).cookies?.auth_token;
         if (!token) {
             throw new UnauthorizedException();
         }
-        return true;
+        const user = await this.authService.getUser(token);
+        return user;
     }
 }

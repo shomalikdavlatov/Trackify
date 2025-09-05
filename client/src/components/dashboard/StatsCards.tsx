@@ -1,13 +1,12 @@
 // components/dashboard/StatsCards.tsx
+import { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import { money } from "../../utils/functions";
 import { type Transaction } from "../../types";
+import { me } from "../../api/auth";
 
 function startOfMonth(d: Date) {
     return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-}
-function daysInMonth(year: number, monthZeroBased: number) {
-    return new Date(year, monthZeroBased + 1, 0).getDate();
 }
 function rangeForMonthOffset(offset: number) {
     const now = new Date();
@@ -17,8 +16,7 @@ function rangeForMonthOffset(offset: number) {
     const end = startOfMonth(
         new Date(now.getFullYear(), now.getMonth() + offset + 1, 1)
     );
-    const numDays = daysInMonth(start.getFullYear(), start.getMonth());
-    return { start, end, numDays };
+    return { start, end };
 }
 function sumByTypeInRange(
     data: Transaction[],
@@ -36,7 +34,6 @@ function sumByTypeInRange(
         })
         .reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
 }
-
 function highestLastNDays(data: Transaction[], days: number) {
     const now = Date.now();
     const start = now - days * 24 * 60 * 60 * 1000;
@@ -48,24 +45,19 @@ function highestLastNDays(data: Transaction[], days: number) {
         (Number(cur.amount) || 0) > (Number(max.amount) || 0) ? cur : max
     );
 }
-
-function pctDeltaByDailyAvg(
-    currTotal: number,
-    currDays: number,
-    prevTotal: number,
-    prevDays: number
-) {
-    const currAvg = currDays > 0 ? currTotal / currDays : 0;
-    const prevAvg = prevDays > 0 ? prevTotal / prevDays : 0;
-    if (prevAvg === 0) return { pct: null, dir: 0 }; // no baseline
-    const pct = ((currAvg - prevAvg) / prevAvg) * 100;
+function pctDelta(currTotal: number, prevTotal: number) {
+    if (!isFinite(prevTotal) || prevTotal === 0) return { pct: null, dir: 0 };
+    const pct = ((currTotal - prevTotal) / prevTotal) * 100;
     const dir = pct > 0 ? 1 : pct < 0 ? -1 : 0;
     return { pct, dir };
 }
-function deltaText(pct: number | null, dir: number, goodWhenUp: boolean) {
-    if (pct === null)
-        return { text: "— vs prev mo (daily avg)", cls: "text-slate-400" };
-    const arrow = dir > 0 ? "↑" : dir < 0 ? "↓" : "→";
+function deltaTextVsLastMonth(
+    pct: number | null,
+    dir: number,
+    goodWhenUp: boolean
+) {
+    if (pct === null) return { text: "— vs last month", cls: "text-slate-400" };
+    const arrow = dir > 0 ? "↑" : dir < 0 ? "↓" : "=";
     const pctStr = `${Math.abs(pct).toFixed(0)}%`;
     const favorable = dir === 0 ? null : dir > 0 ? goodWhenUp : !goodWhenUp;
     const cls =
@@ -74,7 +66,7 @@ function deltaText(pct: number | null, dir: number, goodWhenUp: boolean) {
             : favorable
             ? "text-green-600"
             : "text-rose-600";
-    return { text: `${arrow} ${pctStr} vs prev mo (daily avg)`, cls };
+    return { text: `${arrow} ${pctStr} vs last month`, cls };
 }
 
 type Item = {
@@ -86,40 +78,40 @@ type Item = {
 };
 
 export default function StatsCards({ data }: { data: Transaction[] }) {
+    const [userBalance, setUserBalance] = useState<number | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await me();
+                const raw = (res as any)?.data ?? {};
+                const u = raw.user ?? raw.data ?? raw;
+                const bal = Number(u?.balance);
+                if (mounted) setUserBalance(Number.isFinite(bal) ? bal : null);
+            } catch {
+                if (mounted) setUserBalance(null);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const curr = rangeForMonthOffset(0);
     const last = rangeForMonthOffset(-1);
-    const prev = rangeForMonthOffset(-2);
 
+    const incomeCurr = sumByTypeInRange(data, "income", curr.start, curr.end);
     const incomeLast = sumByTypeInRange(data, "income", last.start, last.end);
-    const incomePrev = sumByTypeInRange(data, "income", prev.start, prev.end);
 
+    const expenseCurr = sumByTypeInRange(data, "expense", curr.start, curr.end);
     const expenseLast = sumByTypeInRange(data, "expense", last.start, last.end);
-    const expensePrev = sumByTypeInRange(data, "expense", prev.start, prev.end);
 
-    const balanceLast = incomeLast - expenseLast;
-    const balancePrev = incomePrev - expensePrev;
+    const incDelta = pctDelta(incomeCurr, incomeLast);
+    const expDelta = pctDelta(expenseCurr, expenseLast);
 
-    const incDelta = pctDeltaByDailyAvg(
-        incomeLast,
-        last.numDays,
-        incomePrev,
-        prev.numDays
-    );
-    const expDelta = pctDeltaByDailyAvg(
-        expenseLast,
-        last.numDays,
-        expensePrev,
-        prev.numDays
-    );
-    const balDelta = pctDeltaByDailyAvg(
-        balanceLast,
-        last.numDays,
-        balancePrev,
-        prev.numDays
-    );
-
-    const incDeltaTxt = deltaText(incDelta.pct, incDelta.dir, true); // up income = good
-    const expDeltaTxt = deltaText(expDelta.pct, expDelta.dir, false); // up expense = bad
-    const balDeltaTxt = deltaText(balDelta.pct, balDelta.dir, true); // up balance = good
+    const incDeltaTxt = deltaTextVsLastMonth(incDelta.pct, incDelta.dir, true); // up income = good
+    const expDeltaTxt = deltaTextVsLastMonth(expDelta.pct, expDelta.dir, false); // up expense = bad
 
     const top14 = highestLastNDays(data, 14);
     const topValue = top14 ? money(Number(top14.amount) || 0) : "—";
@@ -135,32 +127,33 @@ export default function StatsCards({ data }: { data: Transaction[] }) {
             : "text-rose-600"
         : "text-slate-400";
 
-    const balanceClass =
-        balanceLast > 0
+    const userBalValue = userBalance === null ? "—" : money(userBalance);
+    const userBalClass =
+        userBalance === null
+            ? "text-slate-400"
+            : userBalance >= 0
             ? "text-green-600"
-            : balanceLast < 0
-            ? "text-rose-600"
-            : "";
+            : "text-rose-600";
 
     const items: Item[] = [
         {
-            label: "Income (last month)",
-            value: money(incomeLast),
+            label: "Account Balance",
+            value: userBalValue,
+            valueClass: userBalClass,
+        },
+        {
+            label: "Income (this month)",
+            value: money(incomeCurr),
+            valueClass: "text-green-600",
             sub: incDeltaTxt.text,
             subClass: incDeltaTxt.cls,
         },
         {
-            label: "Expense (last month)",
-            value: money(expenseLast),
+            label: "Expense (this month)",
+            value: money(expenseCurr),
+            valueClass: "text-rose-600",
             sub: expDeltaTxt.text,
             subClass: expDeltaTxt.cls,
-        },
-        {
-            label: "Balance (last month)",
-            value: money(balanceLast),
-            valueClass: balanceClass,
-            sub: balDeltaTxt.text,
-            subClass: balDeltaTxt.cls,
         },
         {
             label: "Top Transaction (last 14 days)",
