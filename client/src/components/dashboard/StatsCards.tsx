@@ -166,7 +166,7 @@ export default function StatsCards({ data }: { data: Transaction[] }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {items.map((it) => (
-                <Card key={it.label} className="p-5">
+                <Card key={it.label} className="p-5 overflow-x-auto">
                     <div className="text-sm text-slate-500">{it.label}</div>
                     <div
                         className={`text-2xl font-semibold mt-1 ${

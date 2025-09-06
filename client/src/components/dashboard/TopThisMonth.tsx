@@ -53,7 +53,7 @@ function RankItem({
             : "bg-rose-100/50";
 
     return (
-        <div className={`rounded-md ${border} ${bg} px-3 py-2`}>
+        <div className={`rounded-md ${border} ${bg} px-3 py-2 overflow-x-auto`}>
             <div className={`truncate text-base ${tone}`}>
                 {tx.note?.trim() || (color === "green" ? "Income" : "Expense")}
             </div>
