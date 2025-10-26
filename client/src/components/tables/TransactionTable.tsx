@@ -1,4 +1,6 @@
 import Card from "../ui/Card";
+import { useState } from "react";
+import Button from "../ui/Button";
 import { money } from "../../utils/functions";
 import { type Transaction, type Category } from "../../types";
 
@@ -15,13 +17,29 @@ export default function TransactionTable({
     onEdit,
     onDelete,
 }: Props) {
+    const [currentPage, setCurrentPage] = useState(1);
+    const transactionsPerPage = 20;
+
     const list: Transaction[] = Array.isArray(rows) ? rows : [];
     const cats: Category[] = Array.isArray(categories) ? categories : [];
 
     const catById = Object.fromEntries(cats.map((c) => [c.id, c]));
 
+    // Pagination logic
+    const indexOfLastTransaction = currentPage * transactionsPerPage;
+    const indexOfFirstTransaction =
+        indexOfLastTransaction - transactionsPerPage;
+    const currentTransactions = list.slice(
+        indexOfFirstTransaction,
+        indexOfLastTransaction
+    );
+
+    const totalPages = Math.ceil(list.length / transactionsPerPage);
+
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
     return (
-        <Card className="overflow-hidden">
+        <Card>
             <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                     <thead className="bg-slate-50 text-slate-600">
@@ -35,7 +53,7 @@ export default function TransactionTable({
                         </tr>
                     </thead>
                     <tbody>
-                        {list.length === 0 ? (
+                        {currentTransactions.length === 0 ? (
                             <tr>
                                 <td
                                     colSpan={6}
@@ -45,7 +63,7 @@ export default function TransactionTable({
                                 </td>
                             </tr>
                         ) : (
-                            list.map((r) => (
+                            currentTransactions.map((r) => (
                                 <tr
                                     key={r.id}
                                     className="odd:bg-white even:bg-slate-50"
@@ -94,6 +112,30 @@ export default function TransactionTable({
                     </tbody>
                 </table>
             </div>
+            {totalPages > 1 && (
+                <div className="flex items-center justify-end gap-2 p-4 border-t bg-slate-50">
+                    <span className="text-sm text-slate-600">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                        label="Previous"
+                        variant="primary"
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="py-1.5"
+                    />
+                    <Button
+                        label="Next"
+                        variant="primary"
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={
+                            currentPage === totalPages ||
+                            currentTransactions.length < transactionsPerPage
+                        }
+                        className="py-1.5"
+                    />
+                </div>
+            )}
         </Card>
     );
 }
