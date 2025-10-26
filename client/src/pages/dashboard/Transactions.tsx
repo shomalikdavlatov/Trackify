@@ -1,4 +1,3 @@
-// dashboard/transactions.tsx
 import { useEffect, useState, useMemo } from "react";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
@@ -52,7 +51,6 @@ export default function Transactions() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [editing, setEditing] = useState<Transaction | null>(null);
 
-    // ---------------- FILTER STATE ----------------
     const [filterStartDate, setFilterStartDate] = useState<string>("");
     const [filterEndDate, setFilterEndDate] = useState<string>("");
     const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -61,7 +59,6 @@ export default function Transactions() {
         "all"
     );
 
-    // ---------------- SORT STATE ----------------
     const [sortBy, setSortBy] = useState<"date" | "amount">("date");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -83,41 +80,34 @@ export default function Transactions() {
         })();
     }, []);
 
-    // -------------- FILTERED & SORTED TRANSACTIONS --------------
     const filteredTransactions = useMemo(() => {
         let filtered = transactions.filter((t) => {
-            // Filter by start date
             if (
                 filterStartDate &&
                 new Date(t.datetime) < new Date(filterStartDate)
             )
                 return false;
 
-            // Filter by end date
             if (filterEndDate && new Date(t.datetime) > new Date(filterEndDate))
                 return false;
 
-            // Filter by categories
             if (
                 filterCategory &&
                 filterCategory !== String(t.category)
             )
                 return false;
 
-            // Filter by note
             if (
                 filterNote &&
                 !(t.note ?? "").toLowerCase().includes(filterNote.toLowerCase())
             )
                 return false;
 
-            // Filter by type
             if (filterType !== "all" && t.type !== filterType) return false;
 
             return true;
         });
 
-        // Sorting
         filtered.sort((a, b) => {
             let comp = 0;
             if (sortBy === "date") {
@@ -143,7 +133,6 @@ export default function Transactions() {
         sortOrder,
     ]);
 
-    // ---------- HANDLERS ----------
     const handleCreateTx = async (payload: {
         type: "income" | "expense";
         categoryId: string;
@@ -219,12 +208,10 @@ export default function Transactions() {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Transactions</h1>
-                <Button onClick={addModal.onOpen}>+ Add Transaction</Button>
+                <Button onClick={addModal.onOpen} label="+ Add Transaction" />
             </div>
 
-            {/* --------------- FILTER & SORT UI ---------------- */}
             <div className="flex flex-nowrap gap-1 items-end">
-                {/* Start Date */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Start Date</label>
                     <input
@@ -235,7 +222,6 @@ export default function Transactions() {
                     />
                 </div>
 
-                {/* End Date */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">End Date</label>
                     <input
@@ -246,7 +232,6 @@ export default function Transactions() {
                     />
                 </div>
 
-                {/* Category */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Category</label>
                     <select
@@ -267,7 +252,6 @@ export default function Transactions() {
                     </select>
                 </div>
 
-                {/* Type */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Type</label>
                     <select
@@ -285,7 +269,6 @@ export default function Transactions() {
                     </select>
                 </div>
 
-                {/* Note */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Note</label>
                     <input
@@ -297,7 +280,6 @@ export default function Transactions() {
                     />
                 </div>
 
-                {/* Sort By */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Sort By</label>
                     <select
@@ -312,7 +294,6 @@ export default function Transactions() {
                     </select>
                 </div>
 
-                {/* Sort Order */}
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Order</label>
                     <select
@@ -327,7 +308,6 @@ export default function Transactions() {
                     </select>
                 </div>
 
-                {/* Clear Filters */}
                 <div className="flex flex-col justify-end flex-1">
                     <Button
                         variant="danger"
@@ -341,13 +321,11 @@ export default function Transactions() {
                             setSortOrder("desc");
                         }}
                         className="h-10"
-                    >
-                        Clear Filters
-                    </Button>
+                        label="Clear Filters"
+                    />
                 </div>
             </div>
 
-            {/* --------------- TRANSACTION TABLE ---------------- */}
             <TransactionTable
                 rows={filteredTransactions}
                 categories={categories}
@@ -355,21 +333,21 @@ export default function Transactions() {
                 onDelete={handleDeleteTx}
             />
 
-            {/* Add modal */}
             <Modal
                 open={addModal.open}
                 title="Add Transaction"
                 onClose={addModal.onClose}
                 footer={
-                    <Button onClick={addModal.onClose} variant="ghost">
-                        Close
-                    </Button>
+                    <Button
+                        onClick={addModal.onClose}
+                        variant="ghost"
+                        label="Close"
+                    />
                 }
             >
                 <AddTransactionForm onSubmit={handleCreateTx} />
             </Modal>
 
-            {/* Edit modal */}
             <Modal
                 open={editModal.open}
                 title="Edit Transaction"
@@ -384,9 +362,8 @@ export default function Transactions() {
                             editModal.onClose();
                         }}
                         variant="ghost"
-                    >
-                        Close
-                    </Button>
+                        label="Close"
+                    />
                 }
             >
                 {editing && (

@@ -156,9 +156,7 @@ export default function AddTransactionForm({ onSubmit }: Props) {
             />
 
             <div className="flex justify-end">
-                <Button className="!w-full" type="submit" disabled={loading}>
-                    Add
-                </Button>
+                <Button className="!w-full" type="submit" disabled={loading} label="Add"/>
             </div>
 
             {!loading && categories.length > 0 && filtered.length === 0 && (

@@ -1,21 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MongoDBService } from 'src/core/database/mongodb/mongodb.service';
+import bcrypt from 'bcrypt';
+import { Request } from 'express';
 
 @Injectable()
 export class UserService {
-    constructor(private db: MongoDBService, private jwtService: JwtService) {}
+    constructor(
+        private db: MongoDBService,
+        private jwtService: JwtService,
+    ) {}
 
-    async getUserData(token: string) {
-        const {id} = this.jwtService.decode(token);
-        const user = await this.db.UserModel.findById(id).select("balance email");
-        const categories = await this.db.CategoryModel.find({ user: user._id });
-        const transactions = await this.db.TransactionModel.find({ user: user._id });
+    async changePassword({ oldPassword, newPassword }, req: Request) {
+        const user = await this.getUser(req);
 
-        return {
-            user,
-            categories,
-            transactions
-        }
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) throw new UnauthorizedException('Password is incorrect!');
+
+        const password = await bcrypt.hash(newPassword, 10);
+        await this.db.UserModel.updateOne({ _id: user._id }, { password });
+    }
+
+    async changeCurrency(currency: string, req: Request) {
+        const user = await this.getUser(req);
+        await this.db.UserModel.updateOne({ _id: user._id }, { currency });
+    }
+
+    async getUser(req: Request) {
+        const token = await this.getToken(req);
+        const { id } = await this.jwtService.decode(token);
+        const user = await this.db.UserModel.findOne({ _id: id });
+        if (!user) throw new UnauthorizedException('Please log in again!');
+        return user;
+    }
+
+    async getToken(req: Request) {
+        const token = req.cookies.auth_token;
+        if (!token) throw new UnauthorizedException('Please log in again!');
+        return token;
     }
 }

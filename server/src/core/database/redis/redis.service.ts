@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import IORedis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 
@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class RedisService implements OnModuleInit, OnModuleDestroy {
     private client: IORedis;
     private ttl: number;
+    private logger: Logger = new Logger("Database"); 
 
     constructor(private config: ConfigService) {}
 
@@ -16,6 +17,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
         this.ttl = parseInt(this.config.get<string>('VERIFICATION_TTL')!) || 600;
         this.client = new IORedis({ host, port, password });
+
+        this.logger.log("Redis connected!");
     }
 
     async set(key: string, value: string, ttlSeconds?: number) {

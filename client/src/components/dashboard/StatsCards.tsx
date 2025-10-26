@@ -1,9 +1,8 @@
-// components/dashboard/StatsCards.tsx
 import { useEffect, useState } from "react";
 import Card from "../ui/Card";
-import { money } from "../../utils/functions";
 import { type Transaction } from "../../types";
-import { me } from "../../api/auth";
+import { getUserData } from "../../api/user";
+import { money } from "../../utils/functions";
 
 function startOfMonth(d: Date) {
     return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
@@ -79,18 +78,18 @@ type Item = {
 
 export default function StatsCards({ data }: { data: Transaction[] }) {
     const [userBalance, setUserBalance] = useState<number | null>(null);
+    const [userCurrency, setUserCurrency] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                const res = await me();
-                const raw = (res as any)?.data ?? {};
-                const u = raw.user ?? raw.data ?? raw;
-                const bal = Number(u?.balance);
-                if (mounted) setUserBalance(Number.isFinite(bal) ? bal : null);
+                const {data} = await getUserData();
+                if (mounted) setUserBalance(data.balance);
+                if (mounted) setUserCurrency(data.currency);
             } catch {
                 if (mounted) setUserBalance(null);
+                if (mounted) setUserCurrency(null);
             }
         })();
         return () => {
@@ -110,11 +109,11 @@ export default function StatsCards({ data }: { data: Transaction[] }) {
     const incDelta = pctDelta(incomeCurr, incomeLast);
     const expDelta = pctDelta(expenseCurr, expenseLast);
 
-    const incDeltaTxt = deltaTextVsLastMonth(incDelta.pct, incDelta.dir, true); // up income = good
-    const expDeltaTxt = deltaTextVsLastMonth(expDelta.pct, expDelta.dir, false); // up expense = bad
+    const incDeltaTxt = deltaTextVsLastMonth(incDelta.pct, incDelta.dir, true); 
+    const expDeltaTxt = deltaTextVsLastMonth(expDelta.pct, expDelta.dir, false); 
 
     const top14 = highestLastNDays(data, 14);
-    const topValue = top14 ? money(Number(top14.amount) || 0) : "—";
+    const topValue = top14 ? money(top14.amount, userCurrency) : "—";
     const topSub = top14
         ? `${
               top14.note?.trim() ||
@@ -127,7 +126,7 @@ export default function StatsCards({ data }: { data: Transaction[] }) {
             : "text-rose-600"
         : "text-slate-400";
 
-    const userBalValue = userBalance === null ? "—" : money(userBalance);
+    const userBalValue = userBalance === null ? "—" : money(userBalance, userCurrency);
     const userBalClass =
         userBalance === null
             ? "text-slate-400"
@@ -143,14 +142,14 @@ export default function StatsCards({ data }: { data: Transaction[] }) {
         },
         {
             label: "Income (this month)",
-            value: money(incomeCurr),
+            value: money(incomeCurr, userCurrency),
             valueClass: "text-green-600",
             sub: incDeltaTxt.text,
             subClass: incDeltaTxt.cls,
         },
         {
             label: "Expense (this month)",
-            value: money(expenseCurr),
+            value: money(expenseCurr, userCurrency),
             valueClass: "text-rose-600",
             sub: expDeltaTxt.text,
             subClass: expDeltaTxt.cls,

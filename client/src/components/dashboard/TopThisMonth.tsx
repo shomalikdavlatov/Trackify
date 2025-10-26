@@ -1,4 +1,3 @@
-// components/dashboard/TopThisMonth.tsx
 import Card from "../ui/Card";
 import { money } from "../../utils/functions";
 import { type Transaction } from "../../types";

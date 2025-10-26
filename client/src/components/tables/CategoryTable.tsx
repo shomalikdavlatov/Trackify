@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 
 export default function CategoryTable({
     rows,
-    // optional callbacks if you want parent state updated too
     onUpdated,
     onDeleted,
 }: {
@@ -19,7 +18,6 @@ export default function CategoryTable({
     const [savingId, setSavingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // keep UI consistent even if parent hasn't refreshed yet
     const [overrides, setOverrides] = useState<Map<string, string>>(new Map());
     const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
@@ -42,7 +40,6 @@ export default function CategoryTable({
         }
         try {
             setSavingId(r.id);
-            // send current type back unchanged
             const res = await updateCategory(r.id, nameDraft.trim());
             const updatedRaw = (res as any).data?.data ??
                 (res as any).data ?? {
@@ -77,7 +74,6 @@ export default function CategoryTable({
             setDeletingId(id);
             await deleteCategory(id);
 
-            // hide row locally
             setHiddenIds((prev) => new Set(prev).add(id));
 
             if (onDeleted) await onDeleted(id);

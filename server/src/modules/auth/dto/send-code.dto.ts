@@ -4,6 +4,6 @@ export class SendCodeDto {
     @IsEmail()
     email: string;
 
-    @IsIn(['register', 'forgot'])
-    purpose: 'register' | 'forgot';
+    @IsIn(['Register', 'Reset'])
+    type: 'Register' | 'Reset';
 }

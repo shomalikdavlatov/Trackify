@@ -1,4 +1,3 @@
-// dashboard/dashboard.tsx
 import { useEffect, useState } from "react";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -98,7 +97,7 @@ export default function Dashboard() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Dashboard</h1>
-                <Button onClick={txModal.onOpen}>+ Add Transaction</Button>
+                <Button onClick={txModal.onOpen} label="+ Add Transaction" />
             </div>
 
             <StatsCards data={transactions} />
@@ -148,9 +147,11 @@ export default function Dashboard() {
                 title="Add Transaction"
                 onClose={txModal.onClose}
                 footer={
-                    <Button onClick={txModal.onClose} variant="ghost">
-                        Close
-                    </Button>
+                    <Button
+                        onClick={txModal.onClose}
+                        variant="ghost"
+                        label="Close"
+                    />
                 }
             >
                 <AddTransactionForm onSubmit={handleCreateTx} />

@@ -39,7 +39,7 @@ export default function TypePieChart({ data }: Props) {
                         dataKey="value"
                         nameKey="name"
                         outerRadius={100}
-                        innerRadius={75} // donut look (optional)
+                        innerRadius={75} 
                         labelLine={false}
                     >
                         {rows.map((entry) => (

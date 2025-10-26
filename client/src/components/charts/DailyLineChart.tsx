@@ -1,4 +1,3 @@
-// components/charts/DailyLineChart.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
     ResponsiveContainer,

@@ -29,9 +29,8 @@ export default function Modal({
                             variant="ghost"
                             onClick={onClose}
                             className="!py-2 !px-3"
-                        >
-                            ✕
-                        </Button>
+                            label="✕"
+                        />
                     </div>
 
                     <div className="p-5">{children}</div>

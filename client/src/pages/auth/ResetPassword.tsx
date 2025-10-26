@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import Input from "../../components/Input";
-import Button from "../../components/AuthButton";
+import Button from "../../components/ui/Button";
 import CodeInput from "../../components/CodeInput";
-import { sendResetCode, resetPassword, checkCode } from "../../api/auth";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { validateEmail } from "../../utils/functions";
+import { resetPasswordAPI, sendCodeAPI, verifyCodeAPI } from "../../api/auth";
 
-const ForgotPassword: React.FC = () => {
+const ResetPassword: React.FC = () => {
     const [email, setEmail] = useState("");
     const [codeSent, setCodeSent] = useState(false);
     const [codeVerified, setCodeVerified] = useState(false);
@@ -36,7 +36,7 @@ const ForgotPassword: React.FC = () => {
         }
         try {
             setSendingCode(true);
-            await sendResetCode(email.trim());
+            await sendCodeAPI(email.trim(), "Reset");
             setCodeSent(true);
             toast.success("Verification code sent to your email.");
         } catch (err: any) {
@@ -53,7 +53,7 @@ const ForgotPassword: React.FC = () => {
         }
         try {
             setVerifying(true);
-            await checkCode(email.trim(), code.trim(), "reset");
+            await verifyCodeAPI(email.trim(), code.trim(), "Reset");
             setCodeVerified(true);
             toast.success("Code verified. You can set a new password.");
         } catch (err: any) {
@@ -92,7 +92,7 @@ const ForgotPassword: React.FC = () => {
         if (!validateReset()) return;
         try {
             setSubmitting(true);
-            await resetPassword(email.trim(), code.trim(), password);
+            await resetPasswordAPI(email.trim(), code.trim(), password);
             toast.success("Password reset successful! You can now log in.");
             setCode("");
             setPassword("");
@@ -120,7 +120,7 @@ const ForgotPassword: React.FC = () => {
 
     return (
         <div className="max-w-md mx-auto mt-48 p-6 border rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-4">Forgot Password</h2>
+            <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
 
             <form onSubmit={onSubmit} noValidate>
                 <Input
@@ -135,6 +135,7 @@ const ForgotPassword: React.FC = () => {
 
                 {!codeSent && (
                     <Button
+                        className="w-full"
                         label={sendingCode ? "Sending..." : "Send Code"}
                         onClick={(e?: any) => {
                             e?.preventDefault?.();
@@ -148,6 +149,7 @@ const ForgotPassword: React.FC = () => {
                     <>
                         <CodeInput value={code} onChange={setCode} />
                         <Button
+                            className="w-full"
                             label={verifying ? "Checking..." : "Check Code"}
                             onClick={(e?: any) => {
                                 e?.preventDefault?.();
@@ -180,6 +182,7 @@ const ForgotPassword: React.FC = () => {
                             required
                         />
                         <Button
+                            className="w-full"
                             label={
                                 submitting ? "Resetting..." : "Reset Password"
                             }
@@ -194,4 +197,4 @@ const ForgotPassword: React.FC = () => {
     );
 };
 
-export default ForgotPassword;
+export default ResetPassword;

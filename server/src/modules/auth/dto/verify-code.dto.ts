@@ -1,12 +1,7 @@
-import { IsEmail, IsIn, IsString } from 'class-validator';
+import { IsString } from 'class-validator';
+import { SendCodeDto } from './send-code.dto';
 
-export class VerifyCodeDto {
-    @IsEmail()
-    email: string;
-
+export class VerifyCodeDto extends SendCodeDto {
     @IsString()
     code: string;
-
-    @IsIn(['register', 'forgot'])
-    purpose: 'register' | 'forgot';
 }

@@ -35,7 +35,7 @@
                     <option value="expense">Expense</option>
                 </select>
                 <div className="flex justify-end">
-                    <Button className="!w-full" type="submit">Create</Button>
+                    <Button className="!w-full" type="submit" label="Create"/>
                 </div>
             </form>
         );

@@ -1,4 +1,3 @@
-// components/forms/EditTransactionForm.tsx
 import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/Button";
 import { type Category, type TxType } from "../../types";
@@ -11,14 +10,14 @@ interface EditProps {
         categoryId: string;
         amount: number;
         note?: string;
-        datetime: string; // ISO
+        datetime: string; 
     };
     onSubmit: (payload: {
         type: TxType;
         categoryId: string;
-        amount: number; // integer
+        amount: number; 
         note?: string;
-        datetime: string; // ISO
+        datetime: string; 
     }) => void;
 }
 
@@ -57,7 +56,6 @@ export default function EditTransactionForm({ initial, onSubmit }: EditProps) {
         isoToLocalDatetimeInput(initial.datetime)
     );
 
-    // Load categories
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -86,21 +84,17 @@ export default function EditTransactionForm({ initial, onSubmit }: EditProps) {
             setCategoryId(found.id);
             if (found.type !== type) setType(found.type as TxType);
         } else {
-            // Optional fallback: pick the first category of current type
             const first = categories.find((c) => c.type === type);
             setCategoryId(first?.id ?? "");
         }
         setBootstrapped(true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading, categories, bootstrapped]);
 
-    // Filter by selected type
     const filtered = useMemo(
         () => categories.filter((c) => c.type === type),
         [categories, type]
     );
 
-    // When type changes, only then (and only after loading) clear invalid selection
     useEffect(() => {
         if (loading) return;
         if (categoryId && !filtered.some((c) => c.id === categoryId)) {
@@ -186,9 +180,7 @@ export default function EditTransactionForm({ initial, onSubmit }: EditProps) {
             />
 
             <div className="flex justify-end">
-                <Button type="submit" disabled={loading} className="!w-full">
-                    Save changes
-                </Button>
+                <Button type="submit" disabled={loading} className="!w-full" label="Save changes"/>
             </div>
 
             {!loading && categories.length > 0 && filtered.length === 0 && (

@@ -57,7 +57,7 @@ export default function Categories() {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Categories</h1>
-                <Button onClick={modal.onOpen}>+ Add Category</Button>
+                <Button onClick={modal.onOpen} label="+ Add Category" />
             </div>
 
             <CategoryTable rows={categories} />
@@ -67,9 +67,7 @@ export default function Categories() {
                 title="Add Category"
                 onClose={modal.onClose}
                 footer={
-                    <Button onClick={modal.onClose} variant="ghost">
-                        Close
-                    </Button>
+                    <Button onClick={modal.onClose} variant="ghost" label="Close" />
                 }
             >
                 <AddCategoryForm onSubmit={handleCreateCategory} />

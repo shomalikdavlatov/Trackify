@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import Input from "../../components/Input";
-import Button from "../../components/AuthButton";
-import { loginUser } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { validateEmail } from "../../utils/functions";
+import Button from "../../components/ui/Button";
+import { loginAPI } from "../../api/auth";
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -30,7 +30,7 @@ const Login: React.FC = () => {
 
         try {
             setSubmitting(true); 
-            await loginUser(email, password);
+            await loginAPI(email, password);
             navigate("/");
         } catch (err: any) {    
             const msg =
@@ -68,6 +68,7 @@ const Login: React.FC = () => {
                 />
 
                 <Button
+                    className="w-full"
                     label={submitting ? "Logging in..." : "Login"}
                     onClick={() => {}}
                     disabled={submitting}
@@ -83,7 +84,7 @@ const Login: React.FC = () => {
                     Do not have an account?
                 </button>
                 <button
-                    onClick={() => navigate("/auth/forgot-password")}
+                    onClick={() => navigate("/auth/reset-password")}
                     className="text-blue-500 hover:underline"
                     type="button"
                 >

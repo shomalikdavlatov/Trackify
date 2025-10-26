@@ -26,17 +26,16 @@ function buildDailyBalances(transactions: Transaction[], year: number) {
     return days;
 }
 
-function getColor(balance: number) {
-    if (balance === 0) return "bg-gray-200";
+function getColor(income: number, expense: number) {
+    if (income === 0 && expense === 0) return "bg-gray-200";
+    const balance = income - expense;
     if (balance > 0) {
-        if (balance < 50) return "bg-green-200";
         if (balance < 200) return "bg-green-400";
         return "bg-green-600";
-    } else {
-        if (balance > -50) return "bg-red-200";
+    } else if (balance < 0) {
         if (balance > -200) return "bg-red-400";
         return "bg-red-600";
-    }
+    } else return "bg-purple-300";
 }
 
 export default function DailyBalanceHeatmap({
@@ -59,7 +58,6 @@ export default function DailyBalanceHeatmap({
         setDays(buildDailyBalances(data, year));
     }, [data, year]);
 
-    // Group days by week
     const weeks: any[][] = [];
     days.forEach((day, i) => {
         const weekIndex = Math.floor(i / 7);
@@ -84,7 +82,6 @@ export default function DailyBalanceHeatmap({
 
     return (
         <Card className="p-4 relative">
-            {/* Title + Year Selector */}
             <div className="flex items-center justify-between mb-3">
                 <div className="font-medium">
                     Daily Balance Heatmap ({year})
@@ -105,7 +102,6 @@ export default function DailyBalanceHeatmap({
                 </select>
             </div>
 
-            {/* Heatmap */}
             <div className="relative flex space-x-[3px]">
                 {weeks.map((week, wIdx) => (
                     <div
@@ -113,8 +109,7 @@ export default function DailyBalanceHeatmap({
                         className="flex flex-col space-y-[3px] relative"
                     >
                         {week.map((day: any, dIdx: number) => {
-                            const balance = day.income - day.expense;
-                            const color = getColor(balance);
+                            const color = getColor(day.income, day.expense);
                             const info = `${day.date.toDateString()} | Income: ${
                                 day.income
                             } | Expense: ${day.expense}`;
@@ -130,19 +125,17 @@ export default function DailyBalanceHeatmap({
                                         const childRect = (
                                             e.currentTarget as HTMLDivElement
                                         ).getBoundingClientRect();
-                                        // Position relative to parent
                                         setHoveredDay({
                                             x:
                                                 childRect.left -
                                                 parentRect.left +
                                                 childRect.width / 2,
-                                            y: -6, // show above rectangle
+                                            y: -6, 
                                             info,
                                         });
                                     }}
                                     onMouseLeave={() => setHoveredDay(null)}
                                 >
-                                    {/* Tooltip inside the rectangle container */}
                                     {hoveredDay && hoveredDay.info === info && (
                                         <div
                                             className="absolute bg-gray-800 text-white text-xs px-2 py-1 rounded pointer-events-none z-50 whitespace-nowrap"
@@ -163,7 +156,6 @@ export default function DailyBalanceHeatmap({
                 ))}
             </div>
 
-            {/* Month labels */}
             <div className="flex justify-between mt-2 mr-14 text-[10px] text-gray-500">
                 {months.map((m, i) => (
                     <span key={i}>{m}</span>

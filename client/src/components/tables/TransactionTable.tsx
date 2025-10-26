@@ -1,4 +1,3 @@
-// components/tables/TransactionTable.tsx
 import Card from "../ui/Card";
 import { money } from "../../utils/functions";
 import { type Transaction, type Category } from "../../types";

@@ -33,7 +33,6 @@ function normalizeCategories(raw: any[]): Category[] {
 }
 
 export default function MonthlyBarChart({ data, categoryFilter }: Props) {
-    // 1️⃣ Month key in YYYY-MM format
     const getMonthKey = (dateStr: string) => {
         const d = new Date(dateStr);
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
@@ -54,7 +53,6 @@ export default function MonthlyBarChart({ data, categoryFilter }: Props) {
     }, []);
 
     if (categoryFilter === "all") {
-        // Simple month bars, income vs expense
         const grouped = data.reduce<
             Record<string, { month: string; income: number; expense: number }>
         >((acc, t) => {
@@ -85,10 +83,8 @@ export default function MonthlyBarChart({ data, categoryFilter }: Props) {
         );
     }
 
-    // Income or Expense filtered
     const filtered = data.filter((t) => t.type === categoryFilter);
 
-    // Group by month → category name
     const groupedByMonth: Record<
         string,
         { month: string; [key: string]: number | any }
@@ -97,7 +93,6 @@ export default function MonthlyBarChart({ data, categoryFilter }: Props) {
     filtered.forEach((t) => {
         const month = getMonthKey(t.datetime);
 
-        // 🔹 Correctly get category name from categories array
         const catObj = categories.find((c) => c.id === t.category);
         const catName = catObj?.name || "Uncategorized";
 
@@ -110,7 +105,6 @@ export default function MonthlyBarChart({ data, categoryFilter }: Props) {
         a.month.localeCompare(b.month)
     );
 
-    // Pick color palette for categories
     let colors = [
         "#4ade80",
         "#34d399",
@@ -166,7 +160,6 @@ export default function MonthlyBarChart({ data, categoryFilter }: Props) {
 
     colors.sort(() => Math.random() - 0.5);
 
-    // Only include categories that actually appear in filtered data
     const activeCategories = categories.filter((c) =>
         filtered.some((t) => t.category === c.id)
     );
