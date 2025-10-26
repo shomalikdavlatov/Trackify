@@ -9,10 +9,7 @@ export default function Index() {
     return (
         <AppShell>
             <Routes>
-                <Route
-                    path="/"
-                    element={<Navigate to="/dashboard" replace />}
-                />
+                <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/categories" element={<Categories />} />
