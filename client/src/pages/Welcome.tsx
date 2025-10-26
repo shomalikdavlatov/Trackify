@@ -58,14 +58,14 @@ const Welcome = () => {
                             </Link>
                         ) : (
                             <>
-                                <Link to="/login">
+                                <Link to="/auth/login">
                                     <Button
                                         label="Log In"
                                         variant="ghost"
                                         className="px-5 py-2"
                                     />
                                 </Link>
-                                <Link to="/register">
+                                <Link to="/auth/register">
                                     <Button
                                         label="Get Started"
                                         variant="primary"
@@ -115,14 +115,14 @@ const Welcome = () => {
                             </Link>
                         ) : (
                             <>
-                                <Link to="/register">
+                                <Link to="/auth/register">
                                     <Button
                                         label="Create Free Account"
                                         variant="primary"
                                         className="px-7 py-3 text-base"
                                     />
                                 </Link>
-                                <Link to="/login">
+                                <Link to="/auth/login">
                                     <Button
                                         label="I already have an account"
                                         variant="ghost"
@@ -227,7 +227,7 @@ const Welcome = () => {
                                         />
                                     </Link>
                                 ) : (
-                                    <Link to="/register">
+                                    <Link to="/auth/register">
                                         <Button
                                             label="Create Free Account"
                                             variant="ghost"
